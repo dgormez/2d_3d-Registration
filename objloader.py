@@ -7,6 +7,7 @@ def MTL(filename):
     for line in open(filename, "r"):
         if line.startswith('#'): continue
         values = line.split()
+
         if not values: continue
         if values[0] == 'newmtl':
             mtl = contents[values[1]] = {}
@@ -28,6 +29,7 @@ def MTL(filename):
                 GL_UNSIGNED_BYTE, image)
         else:
             mtl[values[0]] = map(float, values[1:])
+
     return contents
  
 class OBJ:
@@ -75,9 +77,15 @@ class OBJ:
                     else:
                         norms.append(0)
                 self.faces.append((face, norms, texcoords, material))
- 
+
+        print ("Length: vertices = %s ; normals = %s ; textcoord = %s ; faces = %s " % (len(self.vertices),len(self.normals),len(self.texcoords),len(self.faces)))
+        
         self.gl_list = glGenLists(1)
+        print str(self.gl_list)
         glNewList(self.gl_list, GL_COMPILE)
+        
+
+
         glEnable(GL_TEXTURE_2D)
         glFrontFace(GL_CCW)
         for face in self.faces:
