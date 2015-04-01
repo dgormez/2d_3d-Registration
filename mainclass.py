@@ -29,11 +29,14 @@ class MainWindow(QtGui.QMainWindow):
         self.initMenus()
 
         self.glWidget = GLWidget(self)
-        self.ui.verticalLayout_3.addWidget(self.glWidget)
+        self.ui.horizontalLayout.addWidget(self.glWidget)
+        
 
-        #imgWidget2 = MyQGraphicsView(self)
-        #self.ui.verticalLayout_2.addWidget(imgWidget2)
-
+        self.imgWidget2 = MyQGraphicsView(self)
+        self.imgWidget2.setImage("tex_0.jpg")
+        self.imgWidget2.set3dModel(self.glWidget.obj)
+        self.ui.horizontalLayout.addWidget(self.imgWidget2)
+        
 
     def initActions(self):
         self.exitAction = QtGui.QAction('Quit', self)
@@ -75,6 +78,7 @@ class MainWindow(QtGui.QMainWindow):
         print "in Key pressed "
         if e.key() == QtCore.Qt.Key_Control:
             self.glWidget.controlPressed = True
+            self.imgWidget2.controlPressed = True
         if e.key() == QtCore.Qt.Key_Shift:
             self.glWidget.shiftPressed = True
 

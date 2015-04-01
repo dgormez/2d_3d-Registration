@@ -3,7 +3,7 @@ from OpenGL.GL import *
 import numpy 
 import time
 
-import cv2
+
 
 
 def MTL(filename):
@@ -12,15 +12,14 @@ def MTL(filename):
     for line in open(filename, "r"):
         if line.startswith('#'): continue
         values = line.split()
-        print "values MTL = " + str(values)
+        #print "values MTL = " + str(values)
         if not values: continue
         if values[0] == 'newmtl':
             mtl = contents[values[1]] = {}
-            print "Mtl = " + str(mtl)
+            #print "Mtl = " + str(mtl)
         elif mtl is None:
             raise ValueError, "mtl file doesn't start with newmtl stmt"
         elif values[0] == 'map_Kd':
-            print "test 1"
             # load the texture referred to by this declaration
             mtl[values[0]] = values[1]
             #surf = cv2.imread(mtl['map_Kd'])
@@ -54,9 +53,12 @@ class OBJ:
         self.texcoords = []
         self.faces = []
 
+        self.uniqueID = []
         self.selectedFaces = []
         self.modifiedFaces = []
         
+        self.gColorID = numpy.zeros(3)
+        self.m_colorID = numpy.zeros(3)
 
 
         material = None
@@ -101,7 +103,7 @@ class OBJ:
         #print ("min self.face" + str(min(self.faces)))
         #print ("Shapes self.faces" + str(self.faces.shape) + "  Shapes self.vertices" + str(self.vertices.shape))
         self.gl_list = glGenLists(1)
-        print str(self.gl_list)
+        #print str(self.gl_list)
         glNewList(self.gl_list, GL_COMPILE)
         
         print ("vertice [0] " + str(self.vertices[0]))
@@ -152,6 +154,17 @@ class OBJ:
         self.texcoords.append([0.5,0.5])
 
 
+    def uniqueColor(self,gColorID):
+        gColorID[0]+=1
+        if(gColorID[0] > 255):
+            gColorID[0] = 0
+            gColorID[1]+=1
+            if(gColorID[1] > 255):
+                gColorID[1] = 0
+                gColorID[2]+= 1
+
+        return gColorID
+
     def addCustomColors(self):
         return
 
@@ -165,6 +178,37 @@ class OBJ:
         print( "self.texcoords[0] = " + str(self.texcoords[0]))
         print ("self.faces[0] =" + str (self.faces[0]) )
 
+        glEnable(GL_TEXTURE_2D)
+        glFrontFace(GL_CCW)
+        for face in self.faces:
+            vertices, normals, texture_coords, material = face
+ 
+            mtl = self.mtl[material]
+            if 'texture_Kd' in mtl:
+                # use diffuse texmap
+                glBindTexture(GL_TEXTURE_2D, mtl['texture_Kd'])
+            else:
+                # just use diffuse colour
+                glColor(*mtl['Kd'])
+                #print " mtl['Kd'] = " + mtl['Kd']
+ 
+            glBegin(GL_POLYGON)
+            for i in range(len(vertices)):
+                if normals[i] > 0:
+                    glNormal3fv(self.normals[normals[i] - 1])
+                if texture_coords[i] > 0:
+                    glTexCoord2fv(self.texcoords[texture_coords[i] - 1])
+                glVertex3fv(self.vertices[vertices[i] - 1])
+            glEnd()
+        glDisable(GL_TEXTURE_2D)
+        glEndList()
+
+
+    def genOpenGLListIDColor(self):
+        self.gl_list_ColorID = glGenLists(1)
+        
+        glNewList(self.gl_list_ColorID, GL_COMPILE)
+        
         glEnable(GL_TEXTURE_2D)
         glFrontFace(GL_CCW)
         for face in self.faces:

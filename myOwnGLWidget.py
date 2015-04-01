@@ -32,7 +32,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print (str(self.height))
         print(str(self.width))
         #Problem with size???
-
+        self.setMinimumSize(200, 200)
 
         self.yRotDeg = 0.0
         self.isPressed = False
@@ -54,22 +54,28 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.zRot = 0
 
         self.lastPos = QtCore.QPoint()
+        self.initializeGL()
+        #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
 
     def initializeGL(self):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
 
-
+        self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
 
-        self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
+        
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        self.fovy = 45.0
+        self.fovy = 60.0
         self.aspect = self.width / float(self.height)
         self.zNear = 1.0
         self.zFar = 40.0
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
+        self.near_height = 2 * 1.0 * math.tan(self.fovy/2)
+
+        #glFrustum(-self.near_height * self.aspect,
+        #            self.near_height * self.aspect, -self.near_height, self.near_height, self.zNear, self.zFar )
         glEnable(GL_DEPTH_TEST)
 
         glMatrixMode(GL_MODELVIEW)
@@ -97,10 +103,12 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        aspect = self.width / float(self.height)
+        self.aspect = self.width / float(self.height)
         
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         #glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
+        #glFrustum(-self.near_height * self.aspect,
+                    #self.near_height * self.aspect, -self.near_height, self.near_height, self.zNear, self.zFar )
         glMatrixMode(GL_MODELVIEW)
 
 
@@ -180,9 +188,13 @@ class GLWidget(QtOpenGL.QGLWidget):
                 vector_pickRay,point_pickray = self.pickRay(e.pos())
                 vectorRay,originRay = self.mouseRay(e.pos())
                 vectorRay2,originRay2 = self.mouseRay2(e.pos())
+                vector_pickRay2,point_pickray2 = self.pickRay2(e.pos())
+                vector_pickRay3,point_pickray3 = self.pickRay3(e.pos())
                 collision, face = self.obj.testIntersection(vectorRay,originRay)
                 collision2, face2 = self.obj.testIntersection(vector_pickRay,point_pickray)
                 collision3, face3 = self.obj.testIntersection(vectorRay2,originRay2)
+                collision4, face4 = self.obj.testIntersection(vector_pickRay2,point_pickray2)
+                collision5, face5 = self.obj.testIntersection(vector_pickRay3,point_pickray3)
 
                 if collision:
                     print "collision 1 [mouseRay()] Succeded" + str (face)
@@ -196,6 +208,10 @@ class GLWidget(QtOpenGL.QGLWidget):
                         self.obj.colorFace(faceToColor,color,True)
                 if collision3:
                     print "Collision 3 mouseRay2() Succeded "  + str (face3)
+                if collision4:
+                    print "Collision 4 [pickRay2()] Succeded "  + str (face4)
+                if collision5:
+                    print "Collision 5 [pickRay3()] Succeded "  + str (face5)
 
     def mouseReleaseEvent(self, e):
         print "mouse release"
@@ -243,8 +259,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         while angle > 360 * 16:
             angle -= 360 * 16
         return angle
-
-#launch a ray and see with triangle it intersects
+    #launch a ray and see with triangle it intersects
 
     def pickRay(self,position):
         "Creates a vectorRay computing the  inverse of the eye coordinates"
@@ -255,7 +270,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         aspect = (window_width)/(window_height)
 
         glMatrixMode( GL_PROJECTION )
-        glLoadIdentity()
+        #glLoadIdentity()
 
         near_height = 2 * 1.0 * math.tan(self.fovy/2)
         zNear = 1.0
@@ -319,7 +334,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "point_pickray = " + str(point_pickray)
         print "vector_pickray = " + str(vector_pickRay)
 
-
+        """
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = self.width / float(self.height)
@@ -327,21 +342,192 @@ class GLWidget(QtOpenGL.QGLWidget):
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         #glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
         glMatrixMode(GL_MODELVIEW)
-
+        """
 
         return vector_pickRay,point_pickray
 
+    def pickRay2(self,position):
+        "Creates a vectorRay computing the  inverse of the eye coordinates"
+        print "In PickRay()  computing the  inverse of the eye coordinates "
+        
+        window_width = self.width
+        window_height = self.height
+        aspect = (window_width)/(window_height)
 
-    def mouseRay(self,position):
         glMatrixMode( GL_PROJECTION )
         glLoadIdentity()
+        #glFrustum(-self.near_height * self.aspect, self.near_height * self.aspect, -self.near_height,
+        #   self.near_height, self.zNear, self.zFar )
 
+
+        #glFrustum(-near_height * self.aspect, near_height * self.aspect, - near_height, near_height, self.zNear, self.zFar )
+        #It maybe sets the origin of the look point. Must change.
         """
         glTranslated(self.tx, self.ty, -self.zpos)
         glRotate(self.xRot, 1.0, 0.0, 0.0)
         glRotate(self.yRot , 0.0, 1.0, 0.0)
         glRotate(self.zRot , 0.0, 0.0, 1.0)
         """
+        
+        GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
+
+        window_y = (window_height - position.y()) - window_height/2
+        norm_y = window_y/(window_height/2)
+        window_x = position.x() - window_width/2
+        norm_x = window_x/(window_width/2)
+
+        y = self.near_height * norm_y
+        x = self.near_height * aspect * norm_x
+
+
+        """
+        To transform this eye coordinate pick ray into object coordinates, multiply it by the inverse of the ModelView matrix in use when the scene was rendered. 
+        When performing this multiplication, remember that the pick ray is made up of a vector and a point, and that vectors and points transform differently. 
+
+        You can translate and rotate points, but vectors only rotate. You can translate and rotate points, but vectors only rotate. 
+        The way to guarantee that this is working correctly is to define your point and vector as four-element arrays
+        """
+        
+        near_distance = self.zNear
+        ray_pnt = numpy.array([0.0, 0.0, 0.0, 1.0])
+        ray_vec = numpy.array([x, y, -near_distance, 0.0])
+        #print "ray_pnt =" +  str(ray_pnt)
+        #print "ray_vect = " + str(ray_vec)
+        # your pick ray vector is (x, y, -zNear).
+        #retrieve current modelVieuw Matrix
+
+        mvmatrix = numpy.array(numpy.identity(4), copy=False)
+        mvmatrix = numpy.array(glGetFloatv(GL_MODELVIEW_MATRIX, mvmatrix))
+        #print mvmatrix
+
+        inv_matrix = numpy.linalg.inv(mvmatrix)
+        #print "Model View vmatrix  = " + str(mvmatrix)
+        #print "Inverse Model View vmatrix  = " + str(inv_matrix)
+        #print inv_matrix.shape
+        #print ray_pnt.shape
+        #print ray_vec.shape
+
+        point_pickray = numpy.dot(ray_pnt,inv_matrix)
+        vector_pickRay = numpy.dot(ray_vec,inv_matrix)
+
+        if len(vector_pickRay) == 4:
+            vector_pickRay = numpy.delete(vector_pickRay,3)
+
+        if len(point_pickray) == 4:
+            point_pickray = numpy.delete(point_pickray,3)
+
+        print "point_pickray = " + str(point_pickray)
+        print "vector_pickray = " + str(vector_pickRay)
+
+        """
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glFrustum(-self.near_height * self.aspect, self.near_height * self.aspect, -self.near_height,
+           self.near_height, self.zNear, self.zFar )
+        glMatrixMode(GL_MODELVIEW)
+        """
+
+        return vector_pickRay,point_pickray
+
+    def pickRay3(self,position):
+
+        "Creates a vectorRay computing the  inverse of the eye coordinates"
+        print "In PickRay3()  computing the  inverse of the eye coordinates "
+        
+        window_width = self.width
+        window_height = self.height
+        aspect = (window_width)/(window_height)
+
+        glMatrixMode( GL_PROJECTION )
+        GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
+        #glMatrixMode( GL_PROJECTION )
+        glMatrixMode( GL_MODELVIEW )
+        glLoadIdentity()
+        #glFrustum(-self.near_height * self.aspect, self.near_height * self.aspect, -self.near_height,
+           #self.near_height, self.zNear, self.zFar )
+
+
+        #glFrustum(-near_height * self.aspect, near_height * self.aspect, - near_height, near_height, self.zNear, self.zFar )
+        #It maybe sets the origin of the look point. Must change.
+
+        glTranslated(self.tx, self.ty, -self.zpos)
+        glRotate(self.xRot, 1.0, 0.0, 0.0)
+        glRotate(self.yRot , 0.0, 1.0, 0.0)
+        glRotate(self.zRot , 0.0, 0.0, 1.0)
+        
+        GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
+
+        window_y = (window_height - position.y()) - window_height/2
+        norm_y = window_y/(window_height/2)
+        window_x = position.x() - window_width/2
+        norm_x = window_x/(window_width/2)
+
+        y = self.near_height * norm_y
+        x = self.near_height * aspect * norm_x
+
+        z_cursor = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+        print "z_cursor"  + str(z_cursor)
+
+        """
+        To transform this eye coordinate pick ray into object coordinates, multiply it by the inverse of the ModelView matrix in use when the scene was rendered. 
+        When performing this multiplication, remember that the pick ray is made up of a vector and a point, and that vectors and points transform differently. 
+
+        You can translate and rotate points, but vectors only rotate. You can translate and rotate points, but vectors only rotate. 
+        The way to guarantee that this is working correctly is to define your point and vector as four-element arrays
+        """
+        
+        near_distance = self.zNear
+        ray_pnt = numpy.array([0.0, 0.0, 0.0, 1.0])
+        ray_vec = numpy.array([x, y, -near_distance, 0.0])
+        #print "ray_pnt =" +  str(ray_pnt)
+        #print "ray_vect = " + str(ray_vec)
+        # your pick ray vector is (x, y, -zNear).
+        #retrieve current modelVieuw Matrix
+        #print "Model View vmatrix  = " + str(mvmatrix)
+        #print "Inverse Model View vmatrix  = " + str(inv_matrix)
+        #print inv_matrix.shape
+
+        matModelView = numpy.array(numpy.identity(4), copy=False)
+        matProjection = numpy.array(numpy.identity(4), copy=False)
+        viewport = numpy.zeros(4)
+        #get matrix and viewport
+
+        matModelView = glGetDoublev( GL_MODELVIEW_MATRIX)
+        matProjection = glGetDoublev( GL_PROJECTION_MATRIX)
+        viewport = glGetIntegerv( GL_VIEWPORT)
+        
+        inv_matrix = numpy.linalg.inv(matModelView)
+
+        transformMatrix = numpy.linalg.inv(numpy.dot(matProjection,matModelView))
+
+        print "In paick Ray 3"
+        print matModelView
+        print matProjection
+
+
+        point_pickray = numpy.dot(ray_pnt,transformMatrix)
+        vector_pickRay = numpy.dot(ray_vec,transformMatrix)
+
+        if len(vector_pickRay) == 4:
+            vector_pickRay = numpy.delete(vector_pickRay,3)
+
+        if len(point_pickray) == 4:
+            point_pickray = numpy.delete(point_pickray,3)
+
+        print "point_pickray = " + str(point_pickray)
+        print "vector_pickray = " + str(vector_pickRay)
+
+
+        return vector_pickRay,point_pickray
+
+    def mouseRay(self,position):
+        glMatrixMode( GL_MODELVIEW )
+        glLoadIdentity()
+        glTranslated(self.tx, self.ty, -self.zpos)
+        glRotate(self.xRot, 1.0, 0.0, 0.0)
+        glRotate(self.yRot , 0.0, 1.0, 0.0)
+        glRotate(self.zRot , 0.0, 0.0, 1.0)
+
 
         "Creates a vectorRay using the gluUnProject twice"
         print "In mouseRay Creating a vectorRay using the gluUnProject twice"
@@ -394,7 +580,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "Vector Ray = " + str(vectorRay)
         print "Origin Ray = " + str(originRay)
 
-
+        """
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = self.width / float(self.height)
@@ -402,38 +588,63 @@ class GLWidget(QtOpenGL.QGLWidget):
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         #glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
         glMatrixMode(GL_MODELVIEW)
-
+        """
         return vectorRay,originRay
 
     def mouseRay2(self,position):
         "Creates a vectorRay using the gluUnProject once and gluReadPixels"
         print "In mouseRay Creating a vectorRay using the gluUnProject twice"
+        glMatrixMode( GL_MODELVIEW ) #or GL_PROJECTION ???
+        glPushMatrix()
+        glLoadIdentity()
+        glTranslated(self.tx, self.ty, -self.zpos)
+        glRotate(self.xRot, 1.0, 0.0, 0.0)
+        glRotate(self.yRot , 0.0, 1.0, 0.0)
+        glRotate(self.zRot , 0.0, 0.0, 1.0)
 
         matModelView = numpy.array(numpy.identity(4), copy=False)
         matProjection = numpy.array(numpy.identity(4), copy=False)
         viewport = numpy.zeros(4)
+
         #get matrix and viewport
-        matModelView = glGetDoublev( GL_MODELVIEW_MATRIX, matModelView )
-        matProjection = glGetDoublev( GL_PROJECTION_MATRIX, matProjection )
-        viewport = glGetIntegerv( GL_VIEWPORT, viewport )
+        matModelView = glGetDoublev( GL_MODELVIEW_MATRIX)
+        matProjection = glGetDoublev( GL_PROJECTION_MATRIX)
+        viewport = glGetIntegerv( GL_VIEWPORT)
         
+        transformMatrix = numpy.linalg.inv(numpy.dot(matProjection,matModelView))
         # window pos of mouse, Y is inverted on Windows
+        #Viewport Coordinates
         winX = position.x() 
-        winY = viewport[3] - position.y() 
+        winY = viewport[3] - position.y()
 
-        z_cursor = glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
+        #winZ = glReadPixels(winX, winY, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
         
+
+
+        #Normalised Device Coordinates  range [-1:1, -1:1, -1:1]
+        x = 2.0 * winX / viewport[2] -1.0 #float x = (2.0f * mouse_x) / width - 1.0f;
+        y = 1.0 - (2.0 * winY) / viewport[3]
+        z = 1.0
+        ray_nds = numpy.array([x,y,z])
+
+        #4d Homogeneous Clip Coordinates range [-1:1, -1:1, -1:1, -1:1]
+        ray_clip = numpy.array([ray_nds[0],ray_nds[1], -1.0, 1.0])
+
+        #4d Eye (Camera) Coordinates range [-x:x, -y:y, -z:z, -w:w]
+        ray_eye = numpy.dot(numpy.linalg.inv(matProjection),ray_clip)
+        ray_eye = numpy.array([ray_eye[0], ray_eye[1], -1.0, 0.0])
+        ray_eye_norm = self.normalize(ray_eye)
+
+
+        #4d World Coordinates  range [-x:x, -y:y, -z:z, -w:w]
+        ray_wor = numpy.dot(numpy.linalg.inv(matModelView),ray_eye_norm)
+        #Do i need model vieuw or vieuw matrix alone????
+        #Do i need to check intersection in world coord or in Object coordinates???
+        ray_wor = self.normalize(ray_wor)
+
         p_start = numpy.zeros(3)
-        p_end = numpy.zeros(3)
-        p_end[0], p_end[1], p_end[2] = GLU.gluUnProject(winX, winY,z_cursor, matModelView, matProjection, 
-             viewport)
 
-        # now you can create a ray from m_start to m_end
-        vectorRay = self.vector(p_end,p_start)
-        
-
-        return vectorRay,p_start
-
+        return ray_wor,p_start
 
     def vector(self,b,c):
         "Makes a vector from two points"
@@ -445,6 +656,21 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         return a
 
+    def normalize(self,a):
+        TmpSum = 0
+        for i in range(0,len(a)):
+            TmpSum += a[i] * a[i]
+
+        normFactor =  math.sqrt(TmpSum)
+
+        return (a /normFactor)
+
+    def colorMousePicking(self):
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_FOG)
+        glDisable(GL_LIGHTING)
+        
+        return
 
 
 #http://svn.navi.cx/misc/trunk/pybzengine/BZEngine/UI/ThreeDRender/Engine.py
