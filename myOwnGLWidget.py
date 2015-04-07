@@ -17,10 +17,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     xRotationChanged = QtCore.pyqtSignal(int)
     yRotationChanged = QtCore.pyqtSignal(int)
     zRotationChanged = QtCore.pyqtSignal(int)
-
+#############################################################################
     def __init__(self, parent=None):
         super(GLWidget, self).__init__()
         self.parent = parent
+        print "parent = " + str(parent)
+        
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         #self.setFocus(QtCore.Qt.MouseFocusReason)
         #Place super constructor of super-class __init__() of type GLWidget
@@ -29,10 +31,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.width = self.size().width()
         #self.resize(800,800) #To do because of bad geometry
         print str(self.size())
-        print (str(self.height))
-        print(str(self.width))
-        #Problem with size???
-        self.setMinimumSize(200, 200)
 
         self.yRotDeg = 0.0
         self.isPressed = False
@@ -55,11 +53,20 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         self.lastPos = QtCore.QPoint()
         self.initializeGL()
-        #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
 
+#############################################################################
+    def setWidth(self,width):
+        self.setMinimumSize(width/2, 200)
+
+#############################################################################
+    def setModel(self,obj):
+        self.obj = obj
+
+#############################################################################
     def initializeGL(self):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
-
+        
+        print "Load OBJ in myOwnGlWidget"
         self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
@@ -89,7 +96,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         glEnable(GL_CULL_FACE)#????
         glShadeModel(GL_SMOOTH)
 
-
+#############################################################################
     def resizeGL(self, width, height):
         self.height = width
         self.width = height
@@ -116,15 +123,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
         
-        """
-        # RENDER OBJECT
-        glTranslate(self.tx/20., self.ty/20., self.zpos)
-        glRotate(self.ry, 1, 0, 0)
-        glRotate(self.rx, 0, 1, 0)
-        glRotate(self.rz, 0, 0, 1)
-        glCallList(self.obj.gl_list)
-        """
-
         glTranslated(self.tx, self.ty, -self.zpos)
         glRotate(self.xRot, 1.0, 0.0, 0.0)
         glRotate(self.yRot , 0.0, 1.0, 0.0)
@@ -140,7 +138,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             delta_x = mouseEvent.x() - self.oldx
             delta_y = mouseEvent.y() - self.oldy 
             print "self.controlPressed = " + str(self.controlPressed)
-            print "self.rotate = " + str(self.rotate)
+            #print "self.rotate = " + str(self.rotate)
             if int(mouseEvent.buttons()) & QtCore.Qt.LeftButton :
                 if self.rotate : 
                     #self.rx += delta_x
@@ -163,13 +161,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.oldx = mouseEvent.x()
         self.oldy = mouseEvent.y()
 
-
     def wheelEvent(self, event):
         x = event.delta()
         #d = - float(_event.delta()) / 200.0 * self.radius_
         #self.updateGL()
         self.zpos += 2 * math.copysign(1, x)
-        print "wheelEvent x = ", x
+        #print "wheelEvent x = ", x
         self.update()
 
     def mouseDoubleClickEvent(self, mouseEvent):
@@ -183,8 +180,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         if int(e.buttons()) & QtCore.Qt.RightButton : self.move = True
 
         if int(e.buttons()) & QtCore.Qt.LeftButton :
-            if self.shiftPressed == True:
+            if self.shiftPressed:
                 #self.pick(e.pos())
+                """
                 vector_pickRay,point_pickray = self.pickRay(e.pos())
                 vectorRay,originRay = self.mouseRay(e.pos())
                 vectorRay2,originRay2 = self.mouseRay2(e.pos())
@@ -212,6 +210,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     print "Collision 4 [pickRay2()] Succeded "  + str (face4)
                 if collision5:
                     print "Collision 5 [pickRay3()] Succeded "  + str (face5)
+                """
 
     def mouseReleaseEvent(self, e):
         print "mouse release"
@@ -227,7 +226,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         if (event.type()==QtCore.QEvent.KeyPress) and (event.key()==QtCore.Qt.Key_Shift):
             self.shiftPressed = True
-            print "shift Pressed"
+            #print "shift Pressed"
 
         else:
             QWidget.keyPressEvent(self, event)
@@ -672,6 +671,14 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         return
 
+    def colorFaces(self,faces):
+        print faces
+        for faceIdx in faces:
+            self.obj.colorFace(self.obj.faces[faceIdx],'Red')
+
+        self.obj.genOpenGLList()
+
+        return
 
 #http://svn.navi.cx/misc/trunk/pybzengine/BZEngine/UI/ThreeDRender/Engine.py
     

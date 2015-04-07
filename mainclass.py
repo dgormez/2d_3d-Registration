@@ -13,10 +13,11 @@ from mainWindow import Ui_MainWindow
 
 from myOwnGLWidget import GLWidget
 from ImgViewerWidget import MyQGraphicsView
-
+from objloader import OBJ
 
 class MainWindow(QtGui.QMainWindow):
 
+##########################################################################
     def __init__(self):
         super(MainWindow, self).__init__()
         
@@ -28,16 +29,24 @@ class MainWindow(QtGui.QMainWindow):
         self.initActions()
         self.initMenus()
 
-        self.glWidget = GLWidget(self)
-        self.ui.horizontalLayout.addWidget(self.glWidget)
-        
+        print self.size()
+        self.ui.pushButton.clicked.connect(self.handleButton)
 
-        self.imgWidget2 = MyQGraphicsView(self)
+        self.glWidget = GLWidget(self)
+        self.glWidget.setWidth(self.size().width())
+        self.ui.horizontalLayout_Main.addWidget(self.glWidget)
+        
+        self.imgWidget2 = MyQGraphicsView(self,self.glWidget.obj)
         self.imgWidget2.setImage("tex_0.jpg")
         self.imgWidget2.set3dModel(self.glWidget.obj)
-        self.ui.horizontalLayout.addWidget(self.imgWidget2)
-        
+        self.ui.horizontalLayout_Main.addWidget(self.imgWidget2)
+   
+##########################################################################
+    def handleButton(self):
+        self.glWidget.colorFaces(self.imgWidget2.pickedFaces)
+        print ('Hello World')
 
+##########################################################################
     def initActions(self):
         self.exitAction = QtGui.QAction('Quit', self)
         self.exitAction.setShortcut('Ctrl+Q')
@@ -50,21 +59,22 @@ class MainWindow(QtGui.QMainWindow):
         self.exitAct = QtGui.QAction("E&xit", self, shortcut="Ctrl+Q",
                 triggered=self.close)
 
-
+##########################################################################
     def initMenus(self):
         menuBar = self.menuBar()
         fileMenu = menuBar.addMenu('&File')
         fileMenu.addAction(self.exitAction)
         fileMenu.addAction(self.openAct)
 
-
+##########################################################################
     def close(self):
         QtGui.qApp.quit()
 
-
+##########################################################################
     def open(self):
         self.imgWidget.open()
 
+##########################################################################
     def eventFilter(self, event):
         print "in keyPress"
         if event.type() == QtCore.QEvent.KeyPress:
@@ -74,6 +84,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             return QtGui.QDialog.eventFilter(self, event)
 
+##########################################################################
     def keyPressEvent(self, e):
         print "in Key pressed "
         if e.key() == QtCore.Qt.Key_Control:
@@ -81,16 +92,19 @@ class MainWindow(QtGui.QMainWindow):
             self.imgWidget2.controlPressed = True
         if e.key() == QtCore.Qt.Key_Shift:
             self.glWidget.shiftPressed = True
-
+            
+##########################################################################
     def keyReleaseEvent(self, event):
         self.glWidget.controlPressed = False
+        self.imgWidget2.controlPressed = False
 
-        
+########################################################################## 
 def main():
     app = QtGui.QApplication(sys.argv)
     ex = MainWindow()
     ex.show()
     sys.exit(app.exec_())
 
+##########################################################################
 if __name__ == '__main__':
     main()

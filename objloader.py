@@ -99,16 +99,16 @@ class OBJ:
                         norms.append(0)
                 self.faces.append((face, norms, texcoords, material))#Add here unique ID
 
-        print ("Length: vertices = %s ; normals = %s ; textcoord = %s ; faces = %s " % (len(self.vertices),len(self.normals),len(self.texcoords),len(self.faces)))
+        #print ("Length: vertices = %s ; normals = %s ; textcoord = %s ; faces = %s " % (len(self.vertices),len(self.normals),len(self.texcoords),len(self.faces)))
         #print ("min self.face" + str(min(self.faces)))
         #print ("Shapes self.faces" + str(self.faces.shape) + "  Shapes self.vertices" + str(self.vertices.shape))
         self.gl_list = glGenLists(1)
         #print str(self.gl_list)
         glNewList(self.gl_list, GL_COMPILE)
         
-        print ("vertice [0] " + str(self.vertices[0]))
-        print( "self.texcoords[0] = " + str(self.texcoords[0]))
-        print ("self.faces[0] =" + str (self.faces[0]) )
+        #print ("vertice [0] " + str(self.vertices[0]))
+        #print( "self.texcoords[0] = " + str(self.texcoords[0]))
+        #print ("self.faces[0] =" + str (self.faces[0]) )
 
         glEnable(GL_TEXTURE_2D)
         glFrontFace(GL_CCW)
@@ -149,7 +149,7 @@ class OBJ:
 
         self.redTextCoordIndex = len(self.texcoords) +1
         array = [self.redTextCoordIndex,self.redTextCoordIndex,self.redTextCoordIndex]
-        print "array = " + str(array)
+        #print "array = " + str(array)
         self.texcoords.append(array)
         self.texcoords.append([0.5,0.5])
 
@@ -171,12 +171,7 @@ class OBJ:
 
     def genOpenGLList(self):
         self.gl_list = glGenLists(1)
-        print str(self.gl_list)
         glNewList(self.gl_list, GL_COMPILE)
-        
-        print ("vertice [0] " + str(self.vertices[0]))
-        print( "self.texcoords[0] = " + str(self.texcoords[0]))
-        print ("self.faces[0] =" + str (self.faces[0]) )
 
         glEnable(GL_TEXTURE_2D)
         glFrontFace(GL_CCW)
@@ -335,9 +330,13 @@ class OBJ:
             ownTuple = (vertices, normals, texcoords, material)
             #print ("New face = " + str(ownTuple))
             self.faces[idx] = ownTuple
+            print "In color Face(), face to color = " + str(face)
+            print "After coloring, face = " + str(self.faces[idx])
 
         if update:
             self.genOpenGLList()
+
+
         
     def extendColor(self,face,color):
         #Si dans un certain range, modif la couleur
