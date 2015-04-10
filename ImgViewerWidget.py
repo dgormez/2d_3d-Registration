@@ -6,10 +6,10 @@ import cv2
 class MyQGraphicsView(QtGui.QGraphicsView):
 
     #########################################################################
-    def __init__(self ,parent = None):
+    def __init__(self,parent = None):
         QtGui.QGraphicsView.__init__(self)
         #super(MyQGraphicsView, self).mouseMoveEvent(event)
-        self.path = "test.png"
+        self.path = ""
 
         #self.setFocusPolicy(QtCore.Qt.WheelFocus)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -32,14 +32,9 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         self.setScene(self.graphicsScene)
 
         self.controlPressed = False
-        self.obj3D = obj
+
         self.pickedFaces = []
         print ("Size Pixmap: H = %d , W= %d"%(self.pixmap.size().height(),self.pixmap.size().width()))
-
-        
-        img = cv2.imread("tex_0.jpg")
-        self.imgOriginal = img
-
 
         self.coordMarkers = []
         self.normCoordMarkers = []
@@ -68,9 +63,9 @@ class MyQGraphicsView(QtGui.QGraphicsView):
                 
                 print "self.coordMarkers = " + str(self.coordMarkers)
                 mappedMouseClick = self.getPosRelativeToScene(event)
-                self.coordMarkers.append(mappedMouseClick)
+                self.coordMarkers.append((self.path,mappedMouseClick))
                 norm_coord = self.convertToTextureCoord(mappedMouseClick)
-                self.normCoordMarkers.append(norm_coord)
+                self.normCoordMarkers.append((self.path,norm_coord))
                 #result,idx = self.searchIntersectedTriangle(norm_coord) # return result,idxIntersectFaces
                 #self.pickedFaces = idx
                 #print ("Triangle found = "+ str(result) + " and face index = " + str(idx)) #return result,idxIntersectFaces
@@ -205,85 +200,33 @@ class MyQGraphicsView(QtGui.QGraphicsView):
     
     #########################################################################
     def drawCircles(self,img):
-        print "In draw Circles"
-        print self.coordMarkers
+        print "In draw Circles Img Viewer"
+        print "self.coordMarkers = " + str(self.coordMarkers)
+        print "Length of list = " + str(len(self.coordMarkers))
         imgMarked = numpy.copy(img)
 
         for i in range (0,len(self.coordMarkers)):
-            cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
+            imgName,coord = self.coordMarkers[i]
+            #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
+            cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (0,0,255), -1)
 
         #cv2.imshow("window",imgMarked)
         return imgMarked
 
-    
-    #########################################################################
-    def set3dModel(self,model):
-        self.obj3D = model
 
     #########################################################################
     def setImage(self,path):
         print "In set Image"
         self.path = path
+        img = cv2.imread(self.path)
+        self.imgOriginal = img
+        
         self.pixmap = QtGui.QPixmap()
         self.pixmap.load(self.path)
         self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(self.pixmap)
         self.graphicsScene = QtGui.QGraphicsScene()
         self.graphicsScene.addItem(self.graphicsPixmapItem)
         self.setScene(self.graphicsScene)
-
-    #########################################################################
-    def sameSide(self,p1,p2, a,b):
-        cp1 = numpy.cross(self.vector2D(b,a), self.vector2D(p1,a))
-        cp2 = numpy.cross(self.vector2D(b,a), self.vector2D(p2,a))
-
-        if numpy.dot(cp1, cp2) >= 0:
-            return True
-        else:
-            return False
-
-    #########################################################################
-    def pointInTriangle(self,p, a,b,c):
-        "Check if point lies inside a triangle defined by a,b,c"
-        if (self.sameSide(p,a, b,c) and self.sameSide(p,b, a,c) and self.sameSide(p,c, a,b)):
-            return True
-        else:
-            return False
-
-    #########################################################################
-    def vector2D(self,b,c):
-        a = numpy.zeros(2)
-        
-        "a = b - c "
-        a[0] = b[0] - c[0]
-        a[1] = b[1] - c[1]
-
-        #print ("a = %s, b= %s , c= %s"%(a,b,c))
-        return a
-
-    #########################################################################
-    #This function should be moved in myOwnGlWidget
-    def searchIntersectedTriangle(self,norm_point,img_texture="material_0"):
-        "Search if norm_point lies in a face of the OBJ model"
-        result = False
-        idxIntersectFaces = []
-
-        for idx,face in enumerate(self.obj3D.faces):
-            vertices, normals, texture_coords, material = face
-            verticesTextureTriangle = []#Because i m looking in the texture image and not the 3D model
-            
-            if material == img_texture:
-                for i in range(0,len(texture_coords)):
-                    
-                    verticesTextureTriangle.append(self.obj3D.texcoords[texture_coords[i]-1])
-
-                
-                if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
-                    print "Corresponding Face = " + str(face)
-                    idxIntersectFaces.append(idx)
-                    result = True
-                
-
-        return result,idxIntersectFaces
 
 
     """

@@ -17,11 +17,12 @@ class GLWidget(QtOpenGL.QGLWidget):
     xRotationChanged = QtCore.pyqtSignal(int)
     yRotationChanged = QtCore.pyqtSignal(int)
     zRotationChanged = QtCore.pyqtSignal(int)
-#############################################################################
+
+    #########################################################################
     def __init__(self, parent=None):
         super(GLWidget, self).__init__()
         self.parent = parent
-        print "parent = " + str(parent)
+        #print "parent = " + str(parent)
         
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         #self.setFocus(QtCore.Qt.MouseFocusReason)
@@ -30,7 +31,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.height = self.size().height()
         self.width = self.size().width()
         #self.resize(800,800) #To do because of bad geometry
-        print str(self.size())
+        #print str(self.size())
 
         self.yRotDeg = 0.0
         self.isPressed = False
@@ -51,8 +52,94 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.yRot = 0
         self.zRot = 0
 
+        #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
         self.lastPos = QtCore.QPoint()
-        self.initializeGL()
+
+        #self.initializeGL()
+
+
+    #########################################################################
+    #This function should be moved in myOwnGlWidget
+    def searchIntersectedTriangle(self,norm_point,img_texture="material_0"):
+        "Search if norm_point lies in a face of the OBJ model"
+        result = False
+        idxIntersectFaces = -1
+        coord3dFromNormTextCoord = -1
+        print "In searchIntersectedTriangle" 
+        print "norm_point = " + str(norm_point)
+
+        for idx,face in enumerate(self.obj.faces):
+            vertices, normals, texture_coords, material = face
+            verticesTextureTriangle = []#Because i m looking in the texture image and not the 3D model
+            
+            if material == img_texture:
+                for i in range(0,len(texture_coords)):
+                    
+                    verticesTextureTriangle.append(self.obj.texcoords[texture_coords[i]-1])
+
+                
+                if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
+                    print "Corresponding Face = " + str(face)
+                    print "Vertices = " + str(vertices)
+                    v1,v2,v3 = vertices
+                    #print "Type v1 =" + str(type(v1))
+                    #print "Vertices extraction = " + str(v1) + " " + str(v2)
+                    #print "self.obj.vertices = "  + str(self.obj.vertices[0])
+                    idxIntersectFaces = idx
+                    real3DVertices = []
+                    real3DVertices.append(self.obj.vertices[v1-1])
+                    real3DVertices.append(self.obj.vertices[v2-1])
+                    real3DVertices.append(self.obj.vertices[v3-1])
+                    coord3dFromNormTextCoord = self.centerTriangle(real3DVertices)
+                    result = True
+                
+
+        return result,idxIntersectFaces,coord3dFromNormTextCoord
+
+    def centerTriangle(self,vertices):
+        "Simple average of Points in the Triangle. Could be replaced with the exact selected point in texture_coords (and its equivalent in the 3D model)"
+        print "In centerTriangle()"
+        center = numpy.zeros(3)
+        print "Vertices = " + str(vertices)
+
+        center[0] = (vertices[0][0] + vertices[0][1] + vertices[0][2]) *1.0 / 3
+        center[1] = (vertices[1][0] + vertices[1][1] + vertices[2][2]) *1.0 / 3
+        center[2] = (vertices[2][0] + vertices[2][1] + vertices[2][2]) *1.0 / 3
+
+        print "Center = " + str(center)
+        return center
+
+
+    #########################################################################
+    def sameSide(self,p1,p2, a,b):
+        cp1 = numpy.cross(self.vector2D(b,a), self.vector2D(p1,a))
+        cp2 = numpy.cross(self.vector2D(b,a), self.vector2D(p2,a))
+
+        if numpy.dot(cp1, cp2) >= 0:
+            return True
+        else:
+            return False
+
+    #########################################################################
+    def pointInTriangle(self,p, a,b,c):
+        "Check if point lies inside a triangle defined by a,b,c"
+        if (self.sameSide(p,a, b,c) and self.sameSide(p,b, a,c) and self.sameSide(p,c, a,b)):
+            return True
+        else:
+            return False
+
+    #########################################################################
+    def vector2D(self,b,c):
+        a = numpy.zeros(2)
+        
+        "a = b - c "
+        a[0] = b[0] - c[0]
+        a[1] = b[1] - c[1]
+
+        #print ("a = %s, b= %s , c= %s"%(a,b,c))
+        return a
+
+
 
 #############################################################################
     def setWidth(self,width):

@@ -29,22 +29,50 @@ class MainWindow(QtGui.QMainWindow):
         self.initActions()
         self.initMenus()
 
-        print self.size()
-        self.ui.pushButton.clicked.connect(self.handleButton)
+        #print self.size()
+        self.ui.pushButton_Picking.clicked.connect(self.applyPicking)
+
 
         self.glWidget = GLWidget(self)
         self.glWidget.setWidth(self.size().width())
-        self.ui.horizontalLayout_Main.addWidget(self.glWidget)
+        #self.ui.horizontalLayout_Main.addWidget(self.glWidget)
+
+
+        self.textureWidget = MyQGraphicsView(self)
+        self.textureWidget.setImage("tex_0.jpg")
+
+
+        self.imgCameraWidget = MyQGraphicsView(self)
+        self.imgCameraWidget.isTexture = False
+        self.imgCameraWidget.setImage("SDC10225.JPG")
+
+        self.ui.verticalLayout_GL.addWidget(self.glWidget)
+        self.ui.horizontalLayout_IMGs.addWidget(self.imgCameraWidget)
+        self.ui.horizontalLayout_IMGs.addWidget(self.textureWidget)
         
-        self.imgWidget2 = MyQGraphicsView(self,self.glWidget.obj)
-        self.imgWidget2.setImage("tex_0.jpg")
-        self.imgWidget2.set3dModel(self.glWidget.obj)
-        self.ui.horizontalLayout_Main.addWidget(self.imgWidget2)
 
 ##########################################################################
     def handleButton(self):
         self.glWidget.colorFaces(self.imgWidget2.pickedFaces)
         print ('Hello World')
+
+##########################################################################
+    def applyPicking(self):
+        print "In apply Picking"
+        print "Norm texture coord =  " + str(self.textureWidget.normCoordMarkers)
+        material = ""
+
+        for norm_Coord in self.textureWidget.normCoordMarkers:
+            texture,norm_CoordTMP = norm_Coord
+            print "norm_Coord = " + str(norm_CoordTMP)
+            print "texture = " + str(texture)
+
+            if texture == "tex_0.jpg":
+                material = "material_0"
+
+            result,idxIntersectFaces,coord3dFromNormTextCoord = self.glWidget.searchIntersectedTriangle(norm_CoordTMP,material)
+            print "Face found = " + str(result) + " face = " + str(self.glWidget.obj.faces[idxIntersectFaces]) + " Coord3dFromNormTextCoord = " + str(coord3dFromNormTextCoord)
+
 
 ##########################################################################
     def initActions(self):
@@ -72,31 +100,42 @@ class MainWindow(QtGui.QMainWindow):
 
 ##########################################################################
     def open(self):
-        self.imgWidget.open()
+        self.textureWidget.open()
+
 
 ##########################################################################
+
     def eventFilter(self, event):
-        print "in keyPress"
+        #print "in keyPress in MainClass"
         if event.type() == QtCore.QEvent.KeyPress:
             # do some stuff ...
-            keyPressEvent(self.glWidget, event)
+            keyPressEvent(self.imgCameraWidget, event)
             return True # means stop event propagation
         else:
             return QtGui.QDialog.eventFilter(self, event)
 
 ##########################################################################
     def keyPressEvent(self, e):
-        print "in Key pressed "
+        print "in Key pressed"
         if e.key() == QtCore.Qt.Key_Control:
-            self.glWidget.controlPressed = True
-            self.imgWidget2.controlPressed = True
-        if e.key() == QtCore.Qt.Key_Shift:
-            self.glWidget.shiftPressed = True
+            self.imgCameraWidget.controlPressed = True
+            self.textureWidget.controlPressed = True
+        #if e.key() == QtCore.Qt.Key_Shift:
+            #self.glWidget.shiftPressed = True
             
 ##########################################################################
     def keyReleaseEvent(self, event):
-        self.glWidget.controlPressed = False
-        self.imgWidget2.controlPressed = False
+        #self.glWidget.controlPressed = False
+        self.imgCameraWidget.controlPressed = False
+        self.textureWidget.controlPressed = False
+
+##########################################################################
+    def establish2d3dMarkersFrom2Dpicking(self, text_coord, camera_coord):
+        """
+        1) convert text_coord in 3D model cooordinates
+        2) make links between camera coord and 3D coord
+        """
+
 
 ########################################################################## 
 def main():
