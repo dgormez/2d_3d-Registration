@@ -48,6 +48,7 @@ def MTL(filename):
 class OBJ:
     def __init__(self, filename, swapyz=False):
         """Loads a Wavefront OBJ file. """
+        print ("Load A new instance of OBJ file")
         self.vertices = []
         self.normals = []
         self.texcoords = []

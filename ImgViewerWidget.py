@@ -1,11 +1,12 @@
 from PyQt4 import QtCore, QtGui
 import math
 import numpy
+import cv2
 
 class MyQGraphicsView(QtGui.QGraphicsView):
 
     #########################################################################
-    def __init__(self ,obj,parent = None):
+    def __init__(self ,parent = None):
         QtGui.QGraphicsView.__init__(self)
         #super(MyQGraphicsView, self).mouseMoveEvent(event)
         self.path = "test.png"
@@ -19,33 +20,29 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         self.pixmap = QtGui.QPixmap()
         self.pixmap.load(self.path)
+
+
         #self.pixmap = self.pixmap.scaled(self.size(), QtCore.Qt.KeepAspectRatio,transformMode=QtCore.Qt.SmoothTransformation)
+        
         self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(self.pixmap)
-
         self.graphicsScene = QtGui.QGraphicsScene()
+        self.graphicsScene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
         self.graphicsScene.addItem(self.graphicsPixmapItem)
-
+        #self.imItem = self.graphicsScene.addPixmap(self.pixmap)
         self.setScene(self.graphicsScene)
+
         self.controlPressed = False
         self.obj3D = obj
-
         self.pickedFaces = []
         print ("Size Pixmap: H = %d , W= %d"%(self.pixmap.size().height(),self.pixmap.size().width()))
-    
-    #########################################################################
-    def set3dModel(self,model):
-        self.obj3D = model
 
-    #########################################################################
-    def setImage(self,path):
-        print "In set Image"
-        self.path = path
-        self.pixmap = QtGui.QPixmap()
-        self.pixmap.load(self.path)
-        self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(self.pixmap)
-        self.graphicsScene = QtGui.QGraphicsScene()
-        self.graphicsScene.addItem(self.graphicsPixmapItem)
-        self.setScene(self.graphicsScene)
+        
+        img = cv2.imread("tex_0.jpg")
+        self.imgOriginal = img
+
+
+        self.coordMarkers = []
+        self.normCoordMarkers = []
 
     #########################################################################
     def wheelEvent(self, event):
@@ -68,14 +65,41 @@ class MyQGraphicsView(QtGui.QGraphicsView):
             #print "Left Button"
             if self.controlPressed == True : 
                 self.leftPressed = True
+                
+                print "self.coordMarkers = " + str(self.coordMarkers)
                 mappedMouseClick = self.getPosRelativeToScene(event)
+                self.coordMarkers.append(mappedMouseClick)
                 norm_coord = self.convertToTextureCoord(mappedMouseClick)
-                result,idx = self.searchIntersectedTriangle(norm_coord) # return result,idxIntersectFaces
-                self.pickedFaces = idx
-                print ("Triangle found = "+ str(result) + " and face index = " + str(idx)) #return result,idxIntersectFaces
+                self.normCoordMarkers.append(norm_coord)
+                #result,idx = self.searchIntersectedTriangle(norm_coord) # return result,idxIntersectFaces
+                #self.pickedFaces = idx
+                #print ("Triangle found = "+ str(result) + " and face index = " + str(idx)) #return result,idxIntersectFaces
+
+                img_cv_Marked = self.drawCircles(self.imgOriginal)
+                pix_updated = self.convertImgToPixmap(img_cv_Marked)
+                self.updatePixmap(pix_updated)
 
         #self.getPos(event)
-    
+
+    #########################################################################
+    def updatePixmap (self,pixmap):
+        print "In update Pixmap"
+
+        """
+        pix = QtGui.QPixmap()
+        pix.load("test.png")
+        """
+
+        self.graphicsScene = QtGui.QGraphicsScene()
+        self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(pixmap)
+        self.graphicsPixmapItem.setPixmap(pixmap)
+        self.graphicsScene.addItem(self.graphicsPixmapItem)
+        self.setScene(self.graphicsScene)
+        #self.graphicsScene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
+        
+        print "Exit update Pixmap"
+        return
+
     #########################################################################
     def mouseReleaseEvent(self, event):
         if event.button() == QtCore.Qt.MidButton:
@@ -144,6 +168,8 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         return norm_Coord
 
+
+
     #########################################################################
     def convertToImageCoord(self,pos):
         img_Coord = numpy.zeros(2)
@@ -154,75 +180,56 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         return norm_Coord
 
-    #########################################################################
-    def searchIntersectedTriangle(self,norm_point,img_texture="material_0"):
-        "Search if norm_point lies in a face of the OBJ model"
-        result = False
-        idxIntersectFaces = []
+    """
 
-        for idx,face in enumerate(self.obj3D.faces):
-            vertices, normals, texture_coords, material = face
-            verticesTextureTriangle = []#Because i m looking in the texture image and not the 3D model
-            
-            if material == img_texture:
-                for i in range(0,len(texture_coords)):
-                    
-                    verticesTextureTriangle.append(self.obj3D.texcoords[texture_coords[i]-1])
+    If button Pop last pressed:
+        self.coordMarkers.pop()
 
-                
-                if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
-                    print "Corresponding Face = " + str(face)
-                    idxIntersectFaces.append(idx)
-                    result = True
-                
-                """
-                if self.pointInTriangleBarycenter(verticesTextureTriangle,norm_point):
-                    print "Corresponding Face = " + str(face)
-                    idxIntersectFaces.append(idx)
-                    result = True
-                """   
-
-        return result,idxIntersectFaces
+    """
 
     #########################################################################
-    def pointInTriangleBarycenter(self,vertices,norm_point_click):
-        result = False
-        #Compute barycentric coordinates
-        p_x  = norm_point_click[0]
-        p_y  = norm_point_click[1]
+    def convertImgToPixmap(self,cv_img):
+        #if cv_img != None:
+        # Notice the dimensions.
+        height, width, bytesPerComponent = cv_img.shape
+        bytesPerLine = bytesPerComponent * width;
 
-        #print vertices
-        #print vertices[0]
-        #print vertices[0][0]
+        # Convert to RGB for QImage.
+        cv2.cvtColor(cv_img, cv2.cv.CV_BGR2RGB,cv_img)
 
-        p1_x = vertices[0][0]
-        p1_y = vertices[0][1]
-        p2_x = vertices[1][0]
-        p2_y = vertices[1][1]
-        p3_x = vertices[2][0]
-        p3_y = vertices[2][1]
+        image = QtGui.QImage(cv_img.data, width, height, bytesPerLine, QtGui.QImage.Format_RGB888)
+        pix = QtGui.QPixmap.fromImage(image)
 
-        """
-        point p1(x1, y1);
-        point p2(x2, y2);
-        point p3(x3, y3);
+        return pix
 
-        point p(x,y); // <-- You are checking if this point lies in the triangle.
-        """
+    
+    #########################################################################
+    def drawCircles(self,img):
+        print "In draw Circles"
+        print self.coordMarkers
+        imgMarked = numpy.copy(img)
 
-        alpha = ((p2_y - p3_y)*(p_x - p3_x) + (p3_x - p2_x)*(p_y - p3_y)) *1.0 / ((p2_y - p3_y)*(p1_x - p3_x) + (p3_x - p2_x)*(p1_y - p3_y))
-        beta = ((p3_y - p1_y)*(p_x - p3_x) + (p1_x - p3_x)*(p_y - p3_y)) *1.0 /  ((p2_y - p3_y)*(p1_x - p3_x) + (p3_x - p2_x)*(p1_y - p3_y))
-        gamma = 1.0 - alpha - beta
+        for i in range (0,len(self.coordMarkers)):
+            cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
 
-        if ((alpha > 0) and (beta > 0) and (gamma > 0)) :
-            result =  True
+        #cv2.imshow("window",imgMarked)
+        return imgMarked
 
-        if result:
-            print alpha
-            print (("Alpha = %f beta = %f gamma = %f")%(alpha,beta,gamma))
+    
+    #########################################################################
+    def set3dModel(self,model):
+        self.obj3D = model
 
-        return result
-
+    #########################################################################
+    def setImage(self,path):
+        print "In set Image"
+        self.path = path
+        self.pixmap = QtGui.QPixmap()
+        self.pixmap.load(self.path)
+        self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(self.pixmap)
+        self.graphicsScene = QtGui.QGraphicsScene()
+        self.graphicsScene.addItem(self.graphicsPixmapItem)
+        self.setScene(self.graphicsScene)
 
     #########################################################################
     def sameSide(self,p1,p2, a,b):
@@ -252,3 +259,70 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         #print ("a = %s, b= %s , c= %s"%(a,b,c))
         return a
+
+    #########################################################################
+    #This function should be moved in myOwnGlWidget
+    def searchIntersectedTriangle(self,norm_point,img_texture="material_0"):
+        "Search if norm_point lies in a face of the OBJ model"
+        result = False
+        idxIntersectFaces = []
+
+        for idx,face in enumerate(self.obj3D.faces):
+            vertices, normals, texture_coords, material = face
+            verticesTextureTriangle = []#Because i m looking in the texture image and not the 3D model
+            
+            if material == img_texture:
+                for i in range(0,len(texture_coords)):
+                    
+                    verticesTextureTriangle.append(self.obj3D.texcoords[texture_coords[i]-1])
+
+                
+                if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
+                    print "Corresponding Face = " + str(face)
+                    idxIntersectFaces.append(idx)
+                    result = True
+                
+
+        return result,idxIntersectFaces
+
+
+    """
+    #########################################################################
+    def pointInTriangleBarycenter(self,vertices,norm_point_click):
+        result = False
+        #Compute barycentric coordinates
+        p_x  = norm_point_click[0]
+        p_y  = norm_point_click[1]
+
+        #print vertices
+        #print vertices[0]
+        #print vertices[0][0]
+
+        p1_x = vertices[0][0]
+        p1_y = vertices[0][1]
+        p2_x = vertices[1][0]
+        p2_y = vertices[1][1]
+        p3_x = vertices[2][0]
+        p3_y = vertices[2][1]
+
+
+        #point p1(x1, y1);
+        #point p2(x2, y2);
+        #point p3(x3, y3);
+
+        #point p(x,y); // <-- You are checking if this point lies in the triangle.
+
+
+        alpha = ((p2_y - p3_y)*(p_x - p3_x) + (p3_x - p2_x)*(p_y - p3_y)) *1.0 / ((p2_y - p3_y)*(p1_x - p3_x) + (p3_x - p2_x)*(p1_y - p3_y))
+        beta = ((p3_y - p1_y)*(p_x - p3_x) + (p1_x - p3_x)*(p_y - p3_y)) *1.0 /  ((p2_y - p3_y)*(p1_x - p3_x) + (p3_x - p2_x)*(p1_y - p3_y))
+        gamma = 1.0 - alpha - beta
+
+        if ((alpha > 0) and (beta > 0) and (gamma > 0)) :
+            result =  True
+
+        if result:
+            print alpha
+            print (("Alpha = %f beta = %f gamma = %f")%(alpha,beta,gamma))
+
+        return result
+        """

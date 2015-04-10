@@ -65,8 +65,6 @@ class GLWidget(QtOpenGL.QGLWidget):
 #############################################################################
     def initializeGL(self):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
-        
-        print "Load OBJ in myOwnGlWidget"
         self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
@@ -183,6 +181,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             if self.shiftPressed:
                 #self.pick(e.pos())
                 """
+                #Test 3D picking
                 vector_pickRay,point_pickray = self.pickRay(e.pos())
                 vectorRay,originRay = self.mouseRay(e.pos())
                 vectorRay2,originRay2 = self.mouseRay2(e.pos())
@@ -211,7 +210,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                 if collision5:
                     print "Collision 5 [pickRay3()] Succeded "  + str (face5)
                 """
-
+    
+    #########################################################################
     def mouseReleaseEvent(self, e):
         print "mouse release"
         if int(e.buttons()) & QtCore.Qt.LeftButton : self.rotate = False
@@ -219,6 +219,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.isPressed = False
         self.shiftPressed = False
 
+    #########################################################################
     def keyPressEvent(self, event):
         print"key pressed"
         if (event.type()==QtCore.QEvent.KeyPress) and (event.key()==QtCore.Qt.Key_Control):
@@ -231,13 +232,17 @@ class GLWidget(QtOpenGL.QGLWidget):
         else:
             QWidget.keyPressEvent(self, event)
 
+
+    #########################################################################
     def setXRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.xRot:
             self.xRot = angle
             self.xRotationChanged.emit(angle)
             self.updateGL()
+    
 
+    #########################################################################
     def setYRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.yRot:
@@ -245,6 +250,8 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.yRotationChanged.emit(angle)
             self.updateGL()
 
+
+    #########################################################################
     def setZRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.zRot:
@@ -252,6 +259,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.zRotationChanged.emit(angle)
             self.updateGL()
 
+    #########################################################################
     def normalizeAngle(self, angle):
         while angle < 0:
             angle += 360 * 16
@@ -260,7 +268,125 @@ class GLWidget(QtOpenGL.QGLWidget):
         return angle
     #launch a ray and see with triangle it intersects
 
-    def pickRay(self,position):
+
+    
+    #########################################################################
+    def vector(self,b,c):
+        "Makes a vector from two points"
+        a = numpy.zeros(3)
+        "a = b - c "
+        a[0] = b[0] - c[0]
+        a[1] = b[1] - c[1]
+        a[2] = b[2] - c[2]
+
+        return a
+
+    #########################################################################
+    def normalize(self,a):
+        TmpSum = 0
+        for i in range(0,len(a)):
+            TmpSum += a[i] * a[i]
+
+        normFactor =  math.sqrt(TmpSum)
+
+        return (a /normFactor)
+
+    #########################################################################
+    def colorMousePicking(self):
+        glDisable(GL_TEXTURE_2D)
+        glDisable(GL_FOG)
+        glDisable(GL_LIGHTING)
+        
+        return
+
+    #########################################################################
+    def colorFaces(self,faces):
+        print faces
+        for faceIdx in faces:
+            self.obj.colorFace(self.obj.faces[faceIdx],'Red')
+
+        self.obj.genOpenGLList()
+
+        return
+
+#http://svn.navi.cx/misc/trunk/pybzengine/BZEngine/UI/ThreeDRender/Engine.py
+    
+
+"""
+    def pick(self, pos):
+        print "In pick"
+        glInitNames()
+        glSelectBuffer(64)
+        glRenderMode(GL_SELECT)
+        glMatrixMode(GL_PROJECTION)
+        glPushMatrix()
+        glLoadIdentity()
+        viewport = glGetIntegerv(GL_VIEWPORT)
+        #n_w,n_h = display._screen.dimensions
+        #glOrtho(-n_w,n_w,-n_h,n_h,1,0)
+
+        print "viewport = " 
+        print viewport
+        print pos
+        print "pos x = " + str(pos.x()) 
+        self.aspect = self.width / float(self.height)
+        GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
+        
+        GLU.gluPickMatrix(pos.x(),viewport[3]-pos.y(),3,3,viewport)
+        glMatrixMode(GL_MODELVIEW)
+
+        #for index, i in enumerate(self.items):
+        #    glPushName(index)
+
+        print "About to leave Pick()"
+
+"""
+
+
+"""
+void MouseDownEvent(int x, int y)
+ {
+      // turn off texturing, lighting and fog
+      glDisable(GL_TEXTURE_2D);
+      glDisable(GL_FOG);
+      glDisable(GL_LIGHTING);
+ 
+      // render every object in our scene
+      // suppose every object is stored in a list container called SceneObjects
+      list<SceneObject *>::iterator itr = SceneObjects.begin();
+      while(itr != SceneObjects.end())
+      {
+           (*itr)->Picking();
+           itr++;
+      }
+ 
+      // get color information from frame buffer
+      unsigned char pixel[3];
+ 
+      GLint viewport[4];
+      glGetIntegerv(GL_VIEWPORT, viewport);
+ 
+      glReadPixels(x, viewport[3] - y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixel);
+ 
+      // now our picked screen pixel color is stored in pixel[3]
+      // so we search through our object list looking for the object that was selected
+      itr = SceneObjects.begin();
+      while(itr != SceneObjects.end())
+      {
+           if((*itr)->m_colorID[0] == pixel[0] && (*itr)->m_colorID[1] == pixel[1] && (*itr)->m_colorID[2] == pixel[2])
+           {
+                // flag object as selected
+                SetSelected((*itr);
+                break;
+           }
+           itr++;
+      }
+ }
+
+
+"""
+"""
+def pickRay(self,position):
         "Creates a vectorRay computing the  inverse of the eye coordinates"
         print "In PickRay()  computing the  inverse of the eye coordinates "
         
@@ -276,12 +402,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         zFar = 100.0
         #glFrustum(-near_height * self.aspect, near_height * self.aspect, - near_height, near_height, self.zNear, self.zFar )
         #It maybe sets the origin of the look point. Must change.
-        """
-        glTranslated(self.tx, self.ty, -self.zpos)
-        glRotate(self.xRot, 1.0, 0.0, 0.0)
-        glRotate(self.yRot , 0.0, 1.0, 0.0)
-        glRotate(self.zRot , 0.0, 0.0, 1.0)
-        """
+        
+        #glTranslated(self.tx, self.ty, -self.zpos)
+        #glRotate(self.xRot, 1.0, 0.0, 0.0)
+        #glRotate(self.yRot , 0.0, 1.0, 0.0)
+        #glRotate(self.zRot , 0.0, 0.0, 1.0)
+
         
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
 
@@ -294,13 +420,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         x = near_height * aspect * norm_x
 
 
-        """
+        ""
         To transform this eye coordinate pick ray into object coordinates, multiply it by the inverse of the ModelView matrix in use when the scene was rendered. 
         When performing this multiplication, remember that the pick ray is made up of a vector and a point, and that vectors and points transform differently. 
 
         You can translate and rotate points, but vectors only rotate. You can translate and rotate points, but vectors only rotate. 
         The way to guarantee that this is working correctly is to define your point and vector as four-element arrays
-        """
+        ""
         
         near_distance = self.zNear
         ray_pnt = numpy.array([0.0, 0.0, 0.0, 1.0])
@@ -333,7 +459,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "point_pickray = " + str(point_pickray)
         print "vector_pickray = " + str(vector_pickRay)
 
-        """
+        ""
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = self.width / float(self.height)
@@ -341,7 +467,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         #glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
         glMatrixMode(GL_MODELVIEW)
-        """
+        ""
 
         return vector_pickRay,point_pickray
 
@@ -361,12 +487,12 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         #glFrustum(-near_height * self.aspect, near_height * self.aspect, - near_height, near_height, self.zNear, self.zFar )
         #It maybe sets the origin of the look point. Must change.
-        """
+        ""
         glTranslated(self.tx, self.ty, -self.zpos)
         glRotate(self.xRot, 1.0, 0.0, 0.0)
         glRotate(self.yRot , 0.0, 1.0, 0.0)
         glRotate(self.zRot , 0.0, 0.0, 1.0)
-        """
+        ""
         
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
 
@@ -379,13 +505,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         x = self.near_height * aspect * norm_x
 
 
-        """
+        ""
         To transform this eye coordinate pick ray into object coordinates, multiply it by the inverse of the ModelView matrix in use when the scene was rendered. 
         When performing this multiplication, remember that the pick ray is made up of a vector and a point, and that vectors and points transform differently. 
 
         You can translate and rotate points, but vectors only rotate. You can translate and rotate points, but vectors only rotate. 
         The way to guarantee that this is working correctly is to define your point and vector as four-element arrays
-        """
+        ""
         
         near_distance = self.zNear
         ray_pnt = numpy.array([0.0, 0.0, 0.0, 1.0])
@@ -418,13 +544,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "point_pickray = " + str(point_pickray)
         print "vector_pickray = " + str(vector_pickRay)
 
-        """
+        ""
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         glFrustum(-self.near_height * self.aspect, self.near_height * self.aspect, -self.near_height,
            self.near_height, self.zNear, self.zFar )
         glMatrixMode(GL_MODELVIEW)
-        """
+        ""
 
         return vector_pickRay,point_pickray
 
@@ -467,13 +593,13 @@ class GLWidget(QtOpenGL.QGLWidget):
         z_cursor = glReadPixels(x, y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT)
         print "z_cursor"  + str(z_cursor)
 
-        """
+        ""
         To transform this eye coordinate pick ray into object coordinates, multiply it by the inverse of the ModelView matrix in use when the scene was rendered. 
         When performing this multiplication, remember that the pick ray is made up of a vector and a point, and that vectors and points transform differently. 
 
         You can translate and rotate points, but vectors only rotate. You can translate and rotate points, but vectors only rotate. 
         The way to guarantee that this is working correctly is to define your point and vector as four-element arrays
-        """
+        ""
         
         near_distance = self.zNear
         ray_pnt = numpy.array([0.0, 0.0, 0.0, 1.0])
@@ -579,7 +705,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "Vector Ray = " + str(vectorRay)
         print "Origin Ray = " + str(originRay)
 
-        """
+        ""
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
         aspect = self.width / float(self.height)
@@ -587,7 +713,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         #glOrtho(-0.5, +0.5, +0.5, -0.5, 4.0, 15.0)
         glMatrixMode(GL_MODELVIEW)
-        """
+        ""
         return vectorRay,originRay
 
     def mouseRay2(self,position):
@@ -644,115 +770,4 @@ class GLWidget(QtOpenGL.QGLWidget):
         p_start = numpy.zeros(3)
 
         return ray_wor,p_start
-
-    def vector(self,b,c):
-        "Makes a vector from two points"
-        a = numpy.zeros(3)
-        "a = b - c "
-        a[0] = b[0] - c[0]
-        a[1] = b[1] - c[1]
-        a[2] = b[2] - c[2]
-
-        return a
-
-    def normalize(self,a):
-        TmpSum = 0
-        for i in range(0,len(a)):
-            TmpSum += a[i] * a[i]
-
-        normFactor =  math.sqrt(TmpSum)
-
-        return (a /normFactor)
-
-    def colorMousePicking(self):
-        glDisable(GL_TEXTURE_2D)
-        glDisable(GL_FOG)
-        glDisable(GL_LIGHTING)
-        
-        return
-
-    def colorFaces(self,faces):
-        print faces
-        for faceIdx in faces:
-            self.obj.colorFace(self.obj.faces[faceIdx],'Red')
-
-        self.obj.genOpenGLList()
-
-        return
-
-#http://svn.navi.cx/misc/trunk/pybzengine/BZEngine/UI/ThreeDRender/Engine.py
-    
-
-"""
-    def pick(self, pos):
-        print "In pick"
-        glInitNames()
-        glSelectBuffer(64)
-        glRenderMode(GL_SELECT)
-        glMatrixMode(GL_PROJECTION)
-        glPushMatrix()
-        glLoadIdentity()
-        viewport = glGetIntegerv(GL_VIEWPORT)
-        #n_w,n_h = display._screen.dimensions
-        #glOrtho(-n_w,n_w,-n_h,n_h,1,0)
-
-        print "viewport = " 
-        print viewport
-        print pos
-        print "pos x = " + str(pos.x()) 
-        self.aspect = self.width / float(self.height)
-        GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
-        
-        GLU.gluPickMatrix(pos.x(),viewport[3]-pos.y(),3,3,viewport)
-        glMatrixMode(GL_MODELVIEW)
-
-        #for index, i in enumerate(self.items):
-        #    glPushName(index)
-
-        print "About to leave Pick()"
-
-"""
-
-
-"""
-void MouseDownEvent(int x, int y)
- {
-      // turn off texturing, lighting and fog
-      glDisable(GL_TEXTURE_2D);
-      glDisable(GL_FOG);
-      glDisable(GL_LIGHTING);
- 
-      // render every object in our scene
-      // suppose every object is stored in a list container called SceneObjects
-      list<SceneObject *>::iterator itr = SceneObjects.begin();
-      while(itr != SceneObjects.end())
-      {
-           (*itr)->Picking();
-           itr++;
-      }
- 
-      // get color information from frame buffer
-      unsigned char pixel[3];
- 
-      GLint viewport[4];
-      glGetIntegerv(GL_VIEWPORT, viewport);
- 
-      glReadPixels(x, viewport[3] - y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, pixel);
- 
-      // now our picked screen pixel color is stored in pixel[3]
-      // so we search through our object list looking for the object that was selected
-      itr = SceneObjects.begin();
-      while(itr != SceneObjects.end())
-      {
-           if((*itr)->m_colorID[0] == pixel[0] && (*itr)->m_colorID[1] == pixel[1] && (*itr)->m_colorID[2] == pixel[2])
-           {
-                // flag object as selected
-                SetSelected((*itr);
-                break;
-           }
-           itr++;
-      }
- }
-
-
 """

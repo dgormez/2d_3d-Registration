@@ -40,7 +40,7 @@ class MainWindow(QtGui.QMainWindow):
         self.imgWidget2.setImage("tex_0.jpg")
         self.imgWidget2.set3dModel(self.glWidget.obj)
         self.ui.horizontalLayout_Main.addWidget(self.imgWidget2)
-   
+
 ##########################################################################
     def handleButton(self):
         self.glWidget.colorFaces(self.imgWidget2.pickedFaces)
