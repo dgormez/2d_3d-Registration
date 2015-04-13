@@ -63,6 +63,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
                 
                 print "self.coordMarkers = " + str(self.coordMarkers)
                 mappedMouseClick = self.getPosRelativeToScene(event)
+                #
                 self.coordMarkers.append((self.path,mappedMouseClick))
                 norm_coord = self.convertToTextureCoord(mappedMouseClick)
                 self.normCoordMarkers.append((self.path,norm_coord))
@@ -163,7 +164,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         return norm_Coord
 
-
+    
 
     #########################################################################
     def convertToImageCoord(self,pos):

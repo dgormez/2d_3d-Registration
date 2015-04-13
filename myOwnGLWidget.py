@@ -102,9 +102,9 @@ class GLWidget(QtOpenGL.QGLWidget):
         center = numpy.zeros(3)
         print "Vertices = " + str(vertices)
 
-        center[0] = (vertices[0][0] + vertices[0][1] + vertices[0][2]) *1.0 / 3
-        center[1] = (vertices[1][0] + vertices[1][1] + vertices[2][2]) *1.0 / 3
-        center[2] = (vertices[2][0] + vertices[2][1] + vertices[2][2]) *1.0 / 3
+        center[0] = (vertices[0][0] + vertices[1][0] + vertices[2][0]) *1.0 / 3
+        center[1] = (vertices[0][1] + vertices[1][1] + vertices[2][1]) *1.0 / 3
+        center[2] = (vertices[0][2] + vertices[1][2] + vertices[2][2]) *1.0 / 3
 
         print "Center = " + str(center)
         return center
