@@ -147,13 +147,13 @@ class OBJ:
         p is a point in the line
         d is a vector that provides the line's direction
         """
-        """
+        
         self.redTextCoordIndex = len(self.texcoords) +1
         array = [self.redTextCoordIndex,self.redTextCoordIndex,self.redTextCoordIndex]
         #print "array = " + str(array)
         self.texcoords.append(array)
         self.texcoords.append([0.5,0.5])
-        """
+        
         
         return
 

@@ -140,7 +140,6 @@ class GLWidget(QtOpenGL.QGLWidget):
         return a
 
 
-
 #############################################################################
     def setWidth(self,width):
         self.setMinimumSize(width/2, 200)
