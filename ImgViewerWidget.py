@@ -32,13 +32,15 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         self.setScene(self.graphicsScene)
 
         self.controlPressed = False
+        self.altPressed = False
 
         self.pickedFaces = []
         print ("Size Pixmap: H = %d , W= %d"%(self.pixmap.size().height(),self.pixmap.size().width()))
 
         self.coordMarkers = []
         self.normCoordMarkers = []
-
+        self.testProjection = []
+        self.testProjectionNorm = []
     #########################################################################
     def wheelEvent(self, event):
         self.newScale(event.delta(), 1.15,)
@@ -59,8 +61,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         if event.button() == QtCore.Qt.LeftButton:
             #print "Left Button"
             if self.controlPressed == True : 
-                self.leftPressed = True
-                
+
                 print "self.coordMarkers = " + str(self.coordMarkers)
                 mappedMouseClick = self.getPosRelativeToScene(event)
                 #
@@ -74,6 +75,20 @@ class MyQGraphicsView(QtGui.QGraphicsView):
                 img_cv_Marked = self.drawCircles(self.imgOriginal)
                 pix_updated = self.convertImgToPixmap(img_cv_Marked)
                 self.updatePixmap(pix_updated)
+
+            if self.altPressed == True :
+                #I could use another color for projection Test
+                print "In alt Pressed Mouse Press Event"
+                mappedMouseClick = self.getPosRelativeToScene(event)
+                self.testProjection.append((self.path,mappedMouseClick))
+                print self.testProjection
+                norm_coord = self.convertToTextureCoord(mappedMouseClick)
+                self.testProjectionNorm.append((self.path,norm_coord))
+
+                img_cv_Marked = self.drawCircles(self.imgOriginal)
+                pix_updated = self.convertImgToPixmap(img_cv_Marked)
+                self.updatePixmap(pix_updated)
+
 
         #self.getPos(event)
 
@@ -104,6 +119,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
             self.rightPressed = False
 
         self.controlPressed = False
+        self.altPressed = False
         print "mouseReleased"
 
     #########################################################################
@@ -134,6 +150,9 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         if (event.type()==QtCore.QEvent.KeyPress) and (event.key()==QtCore.Qt.Key_Shift):
             self.shiftPressed = True
             print "shift Pressed"
+        if (event.type()==QtCore.QEvent.KeyPress) and (event.key()==QtCore.Qt.Key_Alt):
+            self.altPressed = True
+            print "alt Pressed"
 
         #else:
             #QWidget.keyPressEvent(self, event)
@@ -163,8 +182,6 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         print "Normalized Coordinates = " + str(norm_Coord[0]) + " , " + str(norm_Coord[1])
 
         return norm_Coord
-
-    
 
     #########################################################################
     def convertToImageCoord(self,pos):
@@ -210,6 +227,11 @@ class MyQGraphicsView(QtGui.QGraphicsView):
             imgName,coord = self.coordMarkers[i]
             #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
             cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (0,0,255), -1)
+
+        for i in range (0,len(self.testProjection)):
+            imgName,coord = self.testProjection[i]
+            #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
+            cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (255,0,255), -1)
 
         #cv2.imshow("window",imgMarked)
         return imgMarked
