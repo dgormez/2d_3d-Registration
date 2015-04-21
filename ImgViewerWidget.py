@@ -251,6 +251,10 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         self.graphicsScene.addItem(self.graphicsPixmapItem)
         self.setScene(self.graphicsScene)
 
+    #########################################################################
+    def setWidth(self,width):
+
+        self.setMinimumSize(width, 200)
 
     """
     #########################################################################

@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Fri Apr 17 12:06:58 2015
+# Created: Tue Apr 21 16:04:12 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -51,12 +51,12 @@ class Ui_MainWindow(object):
         self.pushButton_Pop = QtGui.QPushButton(self.gridLayoutWidget_2)
         self.pushButton_Pop.setObjectName(_fromUtf8("pushButton_Pop"))
         self.horizontalLayout_Buttons.addWidget(self.pushButton_Pop)
-        self.pushButton_SaveValidation = QtGui.QPushButton(self.gridLayoutWidget_2)
-        self.pushButton_SaveValidation.setObjectName(_fromUtf8("pushButton_SaveValidation"))
-        self.horizontalLayout_Buttons.addWidget(self.pushButton_SaveValidation)
-        self.pushButton_Picking = QtGui.QPushButton(self.gridLayoutWidget_2)
-        self.pushButton_Picking.setObjectName(_fromUtf8("pushButton_Picking"))
-        self.horizontalLayout_Buttons.addWidget(self.pushButton_Picking)
+        self.pushButton_Show3DCorresp = QtGui.QPushButton(self.gridLayoutWidget_2)
+        self.pushButton_Show3DCorresp.setObjectName(_fromUtf8("pushButton_Show3DCorresp"))
+        self.horizontalLayout_Buttons.addWidget(self.pushButton_Show3DCorresp)
+        self.pushButton_SaveConf = QtGui.QPushButton(self.gridLayoutWidget_2)
+        self.pushButton_SaveConf.setObjectName(_fromUtf8("pushButton_SaveConf"))
+        self.horizontalLayout_Buttons.addWidget(self.pushButton_SaveConf)
         self.pushButton_LoadConf = QtGui.QPushButton(self.gridLayoutWidget_2)
         self.pushButton_LoadConf.setObjectName(_fromUtf8("pushButton_LoadConf"))
         self.horizontalLayout_Buttons.addWidget(self.pushButton_LoadConf)
@@ -134,14 +134,14 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.Tab3.setCurrentIndex(2)
+        self.Tab3.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow", None))
         self.pushButton_Pop.setText(_translate("MainWindow", "Pop last Marker", None))
-        self.pushButton_SaveValidation.setText(_translate("MainWindow", "Save as projectPoint Validation", None))
-        self.pushButton_Picking.setText(_translate("MainWindow", "Apply Picking", None))
+        self.pushButton_Show3DCorresp.setText(_translate("MainWindow", "Show 3D correspondance conf Points", None))
+        self.pushButton_SaveConf.setText(_translate("MainWindow", "Save 2d/3d Markers", None))
         self.pushButton_LoadConf.setText(_translate("MainWindow", "Load 2d/3d config file", None))
         self.Tab3.setTabText(self.Tab3.indexOf(self.tab), _translate("MainWindow", "Tab 1", None))
         self.Tab3.setTabText(self.Tab3.indexOf(self.tab_2), _translate("MainWindow", "Tab 2", None))

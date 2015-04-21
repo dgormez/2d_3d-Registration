@@ -4,8 +4,6 @@ import numpy
 import time
 
 
-
-
 def MTL(filename):
     contents = {}
     mtl = None
@@ -154,7 +152,6 @@ class OBJ:
         self.texcoords.append(array)
         self.texcoords.append([0.5,0.5])
         
-        
         return
 
     def uniqueColor(self,gColorID):
@@ -167,10 +164,6 @@ class OBJ:
                 gColorID[2]+= 1
 
         return gColorID
-
-    def addCustomColors(self):
-        return
-
 
     def genOpenGLList(self):
         self.gl_list = glGenLists(1)
@@ -200,7 +193,6 @@ class OBJ:
             glEnd()
         glDisable(GL_TEXTURE_2D)
         glEndList()
-
 
     def genOpenGLListIDColor(self):
         self.gl_list_ColorID = glGenLists(1)
@@ -302,16 +294,13 @@ class OBJ:
 
     def colorFace(self,face,color,update = False):
         "Color selected face in color given by color parameter"
-        """
         
+        """
         For each vertice, search for the faces having these vertices in common.
         Modify the texture coord and material for those vertices
         Generate a new gl_list
 
-        
         """
-
-
         print "In colorFace()"
 
         idx = self.faces.index(face)
@@ -326,7 +315,7 @@ class OBJ:
         #print ("Old face = " + str(face))
 
         if color == "Red":    
-            material = 'material_4'
+            material = 'Texture_4'
             texcoords = array#self.texcoords[self.redTextCoordIndex - 1 ]
             #print "texcoords = " +str(texcoords)
 
@@ -334,13 +323,12 @@ class OBJ:
             #print ("New face = " + str(ownTuple))
             self.faces[idx] = ownTuple
             print "In color Face(), face to color = " + str(face)
-            print "After coloring, face = " + str(self.faces[idx])
+
+            print "After 'coloring' , face = " + str(self.faces[idx])
 
         if update:
             self.genOpenGLList()
-
-
-        
+      
     def extendColor(self,face,color):
         #Si dans un certain range, modif la couleur
         #Modif en passant en coor spheriques

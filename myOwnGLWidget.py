@@ -14,11 +14,11 @@ from objloader import OBJ
 
 
 class GLWidget(QtOpenGL.QGLWidget):
-    xRotationChanged = QtCore.pyqtSignal(int)
+    xRotationChanged = QtCore.pyqtSignal(int)#?????
     yRotationChanged = QtCore.pyqtSignal(int)
     zRotationChanged = QtCore.pyqtSignal(int)
 
-    #########################################################################
+#########################################################################
     def __init__(self, parent=None):
         super(GLWidget, self).__init__()
         self.parent = parent
@@ -57,30 +57,28 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         #self.initializeGL()
 
-
-    #########################################################################
-    #This function should be moved in myOwnGlWidget
-    def searchIntersectedTriangle(self,norm_point,img_texture="material_0"):
+#########################################################################
+    def searchIntersectedTriangle(self,norm_point,img_texture="Texture_0"):
         "Search if norm_point lies in a face of the OBJ model"
         result = False
         idxIntersectFaces = -1
         coord3dFromNormTextCoord = -1
         print "In searchIntersectedTriangle" 
-        print "norm_point = " + str(norm_point)
+        #print "norm_point = " + str(norm_point)
 
         for idx,face in enumerate(self.obj.faces):
             vertices, normals, texture_coords, material = face
             verticesTextureTriangle = []#Because i m looking in the texture image and not the 3D model
             
             if material == img_texture:
+                #print "material"
                 for i in range(0,len(texture_coords)):
-                    
                     verticesTextureTriangle.append(self.obj.texcoords[texture_coords[i]-1])
 
                 
                 if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
                     print "Corresponding Face = " + str(face)
-                    print "Vertices = " + str(vertices)
+                    #print "Vertices = " + str(vertices)
                     v1,v2,v3 = vertices
                     #print "Type v1 =" + str(type(v1))
                     #print "Vertices extraction = " + str(v1) + " " + str(v2)
@@ -96,6 +94,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         return result,idxIntersectFaces,coord3dFromNormTextCoord
 
+#########################################################################
     def centerTriangle(self,vertices):
         "Simple average of Points in the Triangle. Could be replaced with the exact selected point in texture_coords (and its equivalent in the 3D model)"
         print "In centerTriangle()"
@@ -109,8 +108,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         print "Center = " + str(center)
         return center
 
-
-    #########################################################################
+#########################################################################
     def sameSide(self,p1,p2, a,b):
         cp1 = numpy.cross(self.vector2D(b,a), self.vector2D(p1,a))
         cp2 = numpy.cross(self.vector2D(b,a), self.vector2D(p2,a))
@@ -120,7 +118,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         else:
             return False
 
-    #########################################################################
+#########################################################################
     def pointInTriangle(self,p, a,b,c):
         "Check if point lies inside a triangle defined by a,b,c"
         if (self.sameSide(p,a, b,c) and self.sameSide(p,b, a,c) and self.sameSide(p,c, a,b)):
@@ -128,7 +126,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         else:
             return False
 
-    #########################################################################
+#########################################################################
     def vector2D(self,b,c):
         a = numpy.zeros(2)
         
@@ -139,19 +137,21 @@ class GLWidget(QtOpenGL.QGLWidget):
         #print ("a = %s, b= %s , c= %s"%(a,b,c))
         return a
 
-
 #############################################################################
     def setWidth(self,width):
-        self.setMinimumSize(width/2, 200)
+
+        self.setMinimumSize(width, 200)
 
 #############################################################################
     def setModel(self,obj):
+
         self.obj = obj
 
 #############################################################################
     def initializeGL(self):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
-        self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
+        #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
+        self.obj = OBJ("mesh.obj")
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
 
@@ -202,7 +202,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     #self.near_height * self.aspect, -self.near_height, self.near_height, self.zNear, self.zFar )
         glMatrixMode(GL_MODELVIEW)
 
-
+#############################################################################
     def paintGL(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
         glLoadIdentity()
@@ -213,6 +213,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         glRotate(self.zRot , 0.0, 0.0, 1.0)
         glCallList(self.obj.gl_list)
 
+#############################################################################
     def mouseMoveEvent(self, mouseEvent):
         if self.controlPressed:
             self.rotate = False
@@ -245,6 +246,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.oldx = mouseEvent.x()
         self.oldy = mouseEvent.y()
 
+#############################################################################
     def wheelEvent(self, event):
         x = event.delta()
         #d = - float(_event.delta()) / 200.0 * self.radius_
@@ -253,9 +255,12 @@ class GLWidget(QtOpenGL.QGLWidget):
         #print "wheelEvent x = ", x
         self.update()
 
+#############################################################################
     def mouseDoubleClickEvent(self, mouseEvent):
+
         print "double click"
 
+#############################################################################
     def mousePressEvent(self, e):
         print "mouse press"
         self.isPressed = True
@@ -297,7 +302,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     print "Collision 5 [pickRay3()] Succeded "  + str (face5)
                 """
     
-    #########################################################################
+#########################################################################
     def mouseReleaseEvent(self, e):
         print "mouse release"
         if int(e.buttons()) & QtCore.Qt.LeftButton : self.rotate = False
@@ -305,7 +310,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.isPressed = False
         self.shiftPressed = False
 
-    #########################################################################
+#########################################################################
     def keyPressEvent(self, event):
         print"key pressed"
         if (event.type()==QtCore.QEvent.KeyPress) and (event.key()==QtCore.Qt.Key_Control):
@@ -319,7 +324,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             QWidget.keyPressEvent(self, event)
 
 
-    #########################################################################
+#########################################################################
     def setXRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.xRot:
@@ -327,8 +332,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.xRotationChanged.emit(angle)
             self.updateGL()
     
-
-    #########################################################################
+#########################################################################
     def setYRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.yRot:
@@ -336,8 +340,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.yRotationChanged.emit(angle)
             self.updateGL()
 
-
-    #########################################################################
+#########################################################################
     def setZRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.zRot:
@@ -345,7 +348,7 @@ class GLWidget(QtOpenGL.QGLWidget):
             self.zRotationChanged.emit(angle)
             self.updateGL()
 
-    #########################################################################
+#########################################################################
     def normalizeAngle(self, angle):
         while angle < 0:
             angle += 360 * 16
@@ -354,9 +357,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         return angle
     #launch a ray and see with triangle it intersects
 
-
-    
-    #########################################################################
+#########################################################################
     def vector(self,b,c):
         "Makes a vector from two points"
         a = numpy.zeros(3)
@@ -367,7 +368,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         return a
 
-    #########################################################################
+#########################################################################
     def normalize(self,a):
         TmpSum = 0
         for i in range(0,len(a)):
@@ -377,7 +378,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         return (a /normFactor)
 
-    #########################################################################
+#########################################################################
     def colorMousePicking(self):
         glDisable(GL_TEXTURE_2D)
         glDisable(GL_FOG)
@@ -385,15 +386,34 @@ class GLWidget(QtOpenGL.QGLWidget):
         
         return
 
-    #########################################################################
+#########################################################################
     def colorFaces(self,faces):
         print faces
         for faceIdx in faces:
-            self.obj.colorFace(self.obj.faces[faceIdx],'Red')
+            self.obj.colorFace(self.obj.faces[int(faceIdx)],'Red')
 
         self.obj.genOpenGLList()
 
         return
+
+#########################################################################
+    def colorFaceContainingVertice(self,vertice):
+        print "In Color face containing vertice : " + str (vertice)
+        
+        for idx,face in enumerate(self.obj.faces):
+            vertices, normals, texture_coords, material = face
+
+            if vertice in vertices:
+                print "Vertice found in a face and face is colored"
+                self.obj.colorFace(self.obj.faces[idx],'Red')
+
+
+
+
+
+
+
+
 
 #http://svn.navi.cx/misc/trunk/pybzengine/BZEngine/UI/ThreeDRender/Engine.py
     

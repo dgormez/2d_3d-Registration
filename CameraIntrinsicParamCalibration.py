@@ -60,7 +60,7 @@ class CameraIntrinsicCalibration():
                     cv2.drawChessboardCorners(test_img, (7,10), corners,ret)
                     cv2.imshow('camera',test_img)
                 
-                cv2.waitKey(50)
+                cv2.waitKey(250)
 
 
                 k = cv2.waitKey(15) & 0xFF
