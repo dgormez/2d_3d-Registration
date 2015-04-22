@@ -173,13 +173,15 @@ class OBJ:
         glFrontFace(GL_CCW)
         for face in self.faces:
             vertices, normals, texture_coords, material = face
- 
+            #if material == "Texture_4":
+                #print "RRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRR"
             mtl = self.mtl[material]
             if 'texture_Kd' in mtl:
                 # use diffuse texmap
                 glBindTexture(GL_TEXTURE_2D, mtl['texture_Kd'])
             else:
                 # just use diffuse colour
+                #print material
                 glColor(*mtl['Kd'])
                 #print " mtl['Kd'] = " + mtl['Kd']
  
@@ -292,7 +294,7 @@ class OBJ:
         #print ("a = %s, b= %s , c= %s"%(a,b,c))
         return a
 
-    def colorFace(self,face,color,update = False):
+    def colorFace(self,face,color):
         "Color selected face in color given by color parameter"
         
         """
@@ -301,20 +303,22 @@ class OBJ:
         Generate a new gl_list
 
         """
-        print "In colorFace()"
+
+        #print "In colorFace()"
 
         idx = self.faces.index(face)
         vertices, normals, texture_coords, material = face
+        
         self.modifiedFaces.append((vertices, normals, texture_coords, material,idx))
         array = numpy.array([self.redTextCoordIndex - 1,self.redTextCoordIndex - 1,self.redTextCoordIndex - 1])
-        print array
+        #print array
         array.astype(numpy.uint8)
 
         #array = numpy.array([self.redTextCoordIndex - 1,self.redTextCoordIndex - 1,self.redTextCoordIndex - 1],dtype = numpy.uint8)
         #print "array = ",array
         #print ("Old face = " + str(face))
 
-        if color == "Red":    
+        if color == "Red":
             material = 'Texture_4'
             texcoords = array#self.texcoords[self.redTextCoordIndex - 1 ]
             #print "texcoords = " +str(texcoords)
@@ -322,20 +326,16 @@ class OBJ:
             ownTuple = (vertices, normals, texcoords, material)
             #print ("New face = " + str(ownTuple))
             self.faces[idx] = ownTuple
-            print "In color Face(), face to color = " + str(face)
+            print "After colorFace in ObjLoader, face = " + str(self.faces[idx])
 
-            print "After 'coloring' , face = " + str(self.faces[idx])
-
-        if update:
-            self.genOpenGLList()
       
-    def extendColor(self,face,color):
+    def extendColor(self,faceIdx,color):
         #Si dans un certain range, modif la couleur
         #Modif en passant en coor spheriques
-        print "In extend color() , face = " + str(face)
-        print "Type = " +str(type(face))
-        idx = self.faces.index(face)
-        print "idx = " +str(idx)
+        print "In extend color() , face = " + str(faceIdx)
+
+        face = self.faces[faceIdx]
+        
         verticesInit, normals, texture_coords, material = face
         vertices = []
         verticesTmp = []

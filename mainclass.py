@@ -120,9 +120,9 @@ class MainWindow(QtGui.QMainWindow):
         self.facesCorrespondingTo2DconfigPoints = numpy.load("2d3dMappingFacesIdx.conf.npy")
 
         for idx,faceIdx in enumerate(self.facesCorrespondingTo2DconfigPoints):
-            print int(faceIdx)
+            #print int(faceIdx)
             self.facesCorrespondingTo2DconfigPoints[idx] = int(faceIdx)
-            print self.facesCorrespondingTo2DconfigPoints[idx]
+            #print self.facesCorrespondingTo2DconfigPoints[idx]
             
         print self.facesCorrespondingTo2DconfigPoints
 
@@ -138,13 +138,20 @@ class MainWindow(QtGui.QMainWindow):
         #point[1] = coord.y()
         #print point
 
-        closestPointsIn3D = self.determine3DcorrespondingPointFrom2DImage(coord)
-
+        closestPointsIn3D, finalGuessOnCorrectPoint = self.determine3DcorrespondingPointFrom2DImage(coord)
+        
+        
         for point3D in closestPointsIn3D:
-
             coord3D,idxVertice = point3D
             self.glWidget.colorFaceContainingVertice(idxVertice)
+        
 
+        self.glWidget.obj.genOpenGLList()
+        """
+        for point in finalGuessOnCorrectPoint:
+            coord3D,idxVertice = point
+            self.glWidget.colorFaceContainingVertice(idxVertice)
+        """
         print "End Retro projection"
 
         return
@@ -188,17 +195,19 @@ class MainWindow(QtGui.QMainWindow):
             print "determine Mean"
 
 ##########################################################################
-    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked):
+    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked,radius =5):
         #Find the closest Points projected on the 2D image. In a radius of 5 pixels from the clicked points
         print "In determine 3D corresponding points"
         closestPoints2D =[]
         closestPointsIn3D = []
+        distancesToCamera = []
+
         print type(point2D_fromImage_clicked)
         print point2D_fromImage_clicked
         print len(self.mappingOf3DVertices)
         #print self.mappingOf3DVertices[0]
         print len (self.glWidget.obj.vertices)
-
+        """
         for i in range(len (self.glWidget.obj.vertices)):
             #print self.mappingOf3DVertices[i]
             if self.mappingOf3DVertices[i][0][0][0] > 0 and self.mappingOf3DVertices[i][0][0][1] > 0 and self.mappingOf3DVertices[i][0][0][0] < 5000 and self.mappingOf3DVertices[i][0][0][1] < 5000:
@@ -206,6 +215,7 @@ class MainWindow(QtGui.QMainWindow):
 
         print "Begin Tests"
 
+        
         center_Test = numpy.zeros(2)
         center_Test[0] = 0
         center_Test[1] = 0
@@ -214,10 +224,10 @@ class MainWindow(QtGui.QMainWindow):
         point_Test[0][0][0] = 1
         point_Test[0][0][0] = 1
 
-
         #print self.isInCircle(10,center_Test,point_Test)
 
         print "Tests Finished"
+        """
 
         NPpoint2D_fromImage_clicked = numpy.zeros(2)
         NPpoint2D_fromImage_clicked[0] = point2D_fromImage_clicked.x()
@@ -227,15 +237,33 @@ class MainWindow(QtGui.QMainWindow):
         for idx,point in enumerate(self.mappingOf3DVertices):
             #coordMapped3DVertice = numpy
 
-            if self.isInCircle(10,NPpoint2D_fromImage_clicked,point):
+            if self.isInCircle(radius,NPpoint2D_fromImage_clicked,point):
                 print "In Circle!!"
-                closestPoints2D.append((point,self.distanceOfMappedPoints[idx]))
+                closestPoints2D.append(point)
                 closestPointsIn3D.append((self.glWidget.obj.vertices[idx],idx))
-
+                distancesToCamera.append(self.distanceOfMappedPoints[idx])
         print "Closest projected point from  "+ str(NPpoint2D_fromImage_clicked) +" Is : " +str(closestPoints2D)
         print "Corresponding to this 3d model point = " + str(closestPointsIn3D)
 
-        return closestPointsIn3D
+        idxClosest3DToCamera = self.findMostProbable3dCorrespondanceFromProjectedPoints(distancesToCamera)
+        idxClosest3DToCamera
+        final3DCorrespondingPointGuess = []
+        final3DCorrespondingPointGuess.append(closestPointsIn3D[idxClosest3DToCamera])
+        print "final3DCorrespondingPointGuess = " + str(final3DCorrespondingPointGuess)
+
+        return closestPointsIn3D,final3DCorrespondingPointGuess
+
+##########################################################################
+    def findMostProbable3dCorrespondanceFromProjectedPoints(self,distancesToCamera):
+        return distancesToCamera.index(min(distancesToCamera))
+
+##########################################################################
+    def distance(self,point1,point2):
+        dist = 0
+        for i in range(0,len(point1)):
+            dist += (point1[i] - point2[i])^2
+
+        return math.sqrt(dist)
 
 ##########################################################################
     def isInCircle(self,radius,center,point):
@@ -538,6 +566,8 @@ class MainWindow(QtGui.QMainWindow):
         #self.glWidget.controlPressed = False
         self.imgCameraWidget.controlPressed = False
         self.textureWidget.controlPressed = False
+
+
 
 ########################################################################## 
 def main():

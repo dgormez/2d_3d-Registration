@@ -77,7 +77,8 @@ class GLWidget(QtOpenGL.QGLWidget):
 
                 
                 if self.pointInTriangle(norm_point,verticesTextureTriangle[0],verticesTextureTriangle[1],verticesTextureTriangle[2]):
-                    print "Corresponding Face = " + str(face)
+                    print "Corresponding Face = " + str(face) + " idxIntersectFaces = " +str(idx)
+                    print " face idx = " + str(self.obj.faces[idx]) 
                     #print "Vertices = " + str(vertices)
                     v1,v2,v3 = vertices
                     #print "Type v1 =" + str(type(v1))
@@ -88,6 +89,7 @@ class GLWidget(QtOpenGL.QGLWidget):
                     real3DVertices.append(self.obj.vertices[v1-1])
                     real3DVertices.append(self.obj.vertices[v2-1])
                     real3DVertices.append(self.obj.vertices[v3-1])
+
                     coord3dFromNormTextCoord = self.centerTriangle(real3DVertices)
                     result = True
                 
@@ -388,7 +390,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
 #########################################################################
     def colorFaces(self,faces):
-        print faces
+        #print faces
         for faceIdx in faces:
             self.obj.colorFace(self.obj.faces[int(faceIdx)],'Red')
 
@@ -405,8 +407,11 @@ class GLWidget(QtOpenGL.QGLWidget):
 
             if vertice in vertices:
                 print "Vertice found in a face and face is colored"
+                print "Face to be colored is :" ,face , "Face idx = " + str(idx) 
                 self.obj.colorFace(self.obj.faces[idx],'Red')
+                #self.obj.extendColor(idx,'Red')
 
+        #self.obj.genOpenGLList()
 
 
 
