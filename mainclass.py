@@ -1,6 +1,7 @@
 import sys
 import numpy
 import math
+import glob
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -32,6 +33,9 @@ class MainWindow(QtGui.QMainWindow):
         self.initActions()
         self.initMenus()
 
+        self.getTextureImageList()
+
+
         #print self.size()
         self.ui.pushButton_SaveConf.clicked.connect(self.save2d3DConf)
         #self.ui.pushButton_Show3DCorresp.clicked.connect(self.showConf)
@@ -47,6 +51,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.pushButton_LoadIntrinsic.clicked.connect(self.loadIntrinsicCameraParam)
         self.ui.pushButton_LoadExtrinsic.clicked.connect(self.loadExtrinsicCameraParam)
         self.ui.pushButton_SaveExtrinsic.clicked.connect(self.saveExtrinsic)
+        self.ui.pushButton_showSelectedImages.clicked.connect(self.showSelectedImages)
+
 
         self.glWidget = GLWidget(self)
         self.glWidget.setWidth(self.size().width())
@@ -54,7 +60,7 @@ class MainWindow(QtGui.QMainWindow):
 
 
         self.textureWidget = MyQGraphicsView(self)
-        self.textureWidget.setImage("tex_0.jpg")
+        #self.textureWidget.setImage("tex_0.jpg")
         self.textureWidget.setWidth(self.size().width()/2-20)
 
         self.imgCameraWidget = MyQGraphicsView(self)
@@ -63,9 +69,11 @@ class MainWindow(QtGui.QMainWindow):
         #self.imgCameraWidget.setImage("BucheLogitech.jpg")
         #self.imgCameraWidget.setImage("SANY0011.JPG")
         #self.imgCameraWidget.setImage("DSC00388.JPG")
-        self.imgCameraWidget.setImage("pic00000.JPG")
+        
+        #self.imgCameraWidget.setImage("pic00000.JPG")
         self.imgCameraWidget.setWidth(self.size().width()/2-20)
-
+        self.showSelectedImages()
+        
         self.ui.verticalLayout_GL.addWidget(self.glWidget)
         self.ui.horizontalLayout_IMGs.addWidget(self.imgCameraWidget)
         self.ui.horizontalLayout_IMGs.addWidget(self.textureWidget)
@@ -74,6 +82,29 @@ class MainWindow(QtGui.QMainWindow):
         self.dist_coefs = 0
         self.rvec = 0
         self.tvec = 0
+
+##########################################################################
+    def showSelectedImages(self):
+        print "In show Selected Images"
+        #imgCamera = self.ui.comboBox_CameraImg.itemData(self.ui.comboBox_CameraImg.currentIndex()).toString().toUtf8().constData()
+        #imgTexture = self.ui.comboBox_Text.itemData(self.ui.comboBox_Text.currentIndex()).toString()
+
+        imgCamera = str(self.ui.comboBox_CameraImg.currentText())
+        imgTexture = str(self.ui.comboBox_Text.currentText())
+        
+        print str(self.ui.comboBox_Text.currentText())
+
+        print "imgCamera = " + imgCamera 
+        print "imgTexture = " + imgTexture
+
+        self.imgCameraWidget.setImage(imgCamera)
+        self.textureWidget.setImage(imgTexture)
+
+        for idx,img in enumerate(self.Config_Camera_Images):
+            if imgCamera == img:
+                self.camera_port = idx
+
+        return
 
 ##########################################################################
     def saveValidation(self):
@@ -98,8 +129,11 @@ class MainWindow(QtGui.QMainWindow):
             #print "norm_Coord = " + str(norm_CoordTMP)
             #print "texture = " + str(texture)
 
-            if texture == "tex_0.jpg":
+            if texture == "./3DModelOBJ/tex_0.jpg":
                 material = "Texture_0"
+
+            if texture == "./3DModelOBJ/tex_1.jpg":
+                material = "Texture_1"
 
             result,idxIntersectFaces,coord3dFromNormTextCoord = self.glWidget.searchIntersectedTriangle(norm_CoordTMP,material)
             #print "Face found = " + str(result) + " face = " + str(self.glWidget.obj.faces[idxIntersectFaces]) + " Coord3dFromNormTextCoord = " + str(coord3dFromNormTextCoord)
@@ -114,7 +148,7 @@ class MainWindow(QtGui.QMainWindow):
 
         f.close()
 
-##########################################################################
+###################################################################################
     def showConf(self):
         print "in show conf"
         self.facesCorrespondingTo2DconfigPoints = numpy.load("2d3dMappingFacesIdx.conf.npy")
@@ -128,7 +162,7 @@ class MainWindow(QtGui.QMainWindow):
 
         self.glWidget.colorFaces(self.facesCorrespondingTo2DconfigPoints)
 
-##########################################################################
+###################################################################################
     def retroProjectionTest(self):
         "In Test Retro projection Point"
         imgTmp, coord = self.imgCameraWidget.testProjection[0]
@@ -140,23 +174,24 @@ class MainWindow(QtGui.QMainWindow):
 
         closestPointsIn3D, finalGuessOnCorrectPoint = self.determine3DcorrespondingPointFrom2DImage(coord)
         
-        
+        """
         for point3D in closestPointsIn3D:
             coord3D,idxVertice = point3D
             self.glWidget.colorFaceContainingVertice(idxVertice)
-        
-
-        self.glWidget.obj.genOpenGLList()
         """
+        print "finalGuessOnCorrectPoint = " + str(finalGuessOnCorrectPoint)
+
         for point in finalGuessOnCorrectPoint:
             coord3D,idxVertice = point
             self.glWidget.colorFaceContainingVertice(idxVertice)
-        """
+        
+        self.glWidget.obj.genOpenGLList()
+
         print "End Retro projection"
 
         return
 
-##########################################################################
+###################################################################################
     def mapp3DModelto2D(self):
         "In Test Project Point"
         #Add a get of the current camera port
@@ -187,7 +222,7 @@ class MainWindow(QtGui.QMainWindow):
         print "Max Distance = ", max(self.distanceOfMappedPoints)
 
 
-##########################################################################
+###################################################################################
     def determineMeanDistanceToCamera(self,current_img):
         #Remark: If i always project the hole model, then the correct projected point is the one with the smallest dist to camera
         #The mean is computed to be sure that the correct projected pixel is considered
@@ -195,7 +230,7 @@ class MainWindow(QtGui.QMainWindow):
             print "determine Mean"
 
 ##########################################################################
-    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked,radius =5):
+    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked,radius =2):
         #Find the closest Points projected on the 2D image. In a radius of 5 pixels from the clicked points
         print "In determine 3D corresponding points"
         closestPoints2D =[]
@@ -207,6 +242,7 @@ class MainWindow(QtGui.QMainWindow):
         print len(self.mappingOf3DVertices)
         #print self.mappingOf3DVertices[0]
         print len (self.glWidget.obj.vertices)
+
         """
         for i in range(len (self.glWidget.obj.vertices)):
             #print self.mappingOf3DVertices[i]
@@ -240,13 +276,14 @@ class MainWindow(QtGui.QMainWindow):
             if self.isInCircle(radius,NPpoint2D_fromImage_clicked,point):
                 print "In Circle!!"
                 closestPoints2D.append(point)
-                closestPointsIn3D.append((self.glWidget.obj.vertices[idx],idx))
+                closestPointsIn3D.append((self.glWidget.obj.vertices[idx+1],idx+1))#Or no +1???
                 distancesToCamera.append(self.distanceOfMappedPoints[idx])
         print "Closest projected point from  "+ str(NPpoint2D_fromImage_clicked) +" Is : " +str(closestPoints2D)
         print "Corresponding to this 3d model point = " + str(closestPointsIn3D)
 
         idxClosest3DToCamera = self.findMostProbable3dCorrespondanceFromProjectedPoints(distancesToCamera)
-        idxClosest3DToCamera
+        print "idxClosest3DToCamera = " +str(idxClosest3DToCamera)
+        print "Distance to camera for that point = " + str(distancesToCamera[idxClosest3DToCamera])
         final3DCorrespondingPointGuess = []
         final3DCorrespondingPointGuess.append(closestPointsIn3D[idxClosest3DToCamera])
         print "final3DCorrespondingPointGuess = " + str(final3DCorrespondingPointGuess)
@@ -255,7 +292,10 @@ class MainWindow(QtGui.QMainWindow):
 
 ##########################################################################
     def findMostProbable3dCorrespondanceFromProjectedPoints(self,distancesToCamera):
-        return distancesToCamera.index(min(distancesToCamera))
+        print " max(distancesToCamera) " + str(max(distancesToCamera))
+        print " min(distancesToCamera) " + str(min(distancesToCamera))
+        #Why is it Max and not Min distance???????????
+        return distancesToCamera.index(max(distancesToCamera))
 
 ##########################################################################
     def distance(self,point1,point2):
@@ -327,17 +367,21 @@ class MainWindow(QtGui.QMainWindow):
     def intrinsicCalibration(self):
         "Allows the retrieval of the intrinsic parameters of the Camera"
         #Needs to add a get camera port from the combo Box
+        self.camera_port = self.ui.comboBox_CameraNumber.currentIndex() + 1 
+
+        print type(self.camera_port)
+        print self.camera_port
+
         self.cameraCalib = CameraIntrinsicCalibration(self.camera_port)
+
 
 ##########################################################################
     def saveIntrinsic(self):
-
         self.cameraCalib.saveParameters()
 
 ##########################################################################
     def saveExtrinsic(self):
-
-        self.cameraCalib.saveParameters()
+        self.cameraCalibExt.saveParameters()
 
 ##########################################################################
     def computeExtrinsicParameter(self):
@@ -352,16 +396,20 @@ class MainWindow(QtGui.QMainWindow):
 
         #points2D,points3D = self.correspondingPointsPerImage("DSC00388.JPG")
         #points2D,points3D = self.correspondingPointsPerImage("SANY0011.JPG")
-        points2D,points3D = self.correspondingPointsPerImage("pic00000.JPG")
+        self.camera_port = self.ui.comboBox_CameraNumber.currentIndex() + 1
+        
+        for idx,img in enumerate(self.Config_Camera_Images):
+            print img
+            points2D,points3D = self.correspondingPointsPerImage(img)
 
-        print len(points2D)
-        print len(points3D)
+            print len(points2D)
+            print len(points3D)
 
-        self.cameraCalib = CameraExtrinsicParameters(self.camera_port)
-        self.cameraCalib.loadIntrinsicCameraParam()
-        self.cameraCalib.setCorrespondingPoints(points2D,points3D)
-        self.cameraCalib.computeExtrensicParameters()
-        self.cameraCalib.saveParameters()
+            self.cameraCalibExt = CameraExtrinsicParameters(self.camera_port)
+            self.cameraCalibExt.loadIntrinsicCameraParam()
+            self.cameraCalibExt.setCorrespondingPoints(points2D,points3D)
+            self.cameraCalibExt.computeExtrensicParameters()
+            self.cameraCalibExt.saveParameters()
 
 ##########################################################################
     def save2d3DConf(self):
@@ -372,7 +420,7 @@ class MainWindow(QtGui.QMainWindow):
 
         f = open('2d3dMapping.conf','w')
 
-        print "In save 2d 3d config"
+        print "In save 2d 3d config()"
         #print "Norm texture coord =  " + str(self.textureWidget.normCoordMarkers)
         material = ""
         string = ""
@@ -387,16 +435,20 @@ class MainWindow(QtGui.QMainWindow):
 
             #print "norm_Coord = " + str(norm_CoordTMP)
             print "texture = " + str(texture)
+            print "imgCamera = " + str(imgCamera)
 
-            if texture == "tex_0.jpg":
+            if texture == "./3DModelOBJ/tex_0.jpg":
                 material = "Texture_0"
-            if texture == "tex_1.jpg":
+            if texture == "./3DModelOBJ/tex_1.jpg":
                 material = "Texture_1"
-            if texture == "tex_2.jpg":
+            if texture == "./3DModelOBJ/tex_2.jpg":
                 material = "Texture_2"
 
             result,idxIntersectFaces,coord3dFromNormTextCoord = self.glWidget.searchIntersectedTriangle(norm_CoordTMP,material)
             print "Face found = " + str(result) + " face = " + str(self.glWidget.obj.faces[idxIntersectFaces]) + " Coord3dFromNormTextCoord = " + str(coord3dFromNormTextCoord)
+            print "material = " + str(material)
+            print "Norm Texture coord = " + str(norm_CoordTMP)
+
             arrayCoordImgTMP = self.convertQpointFToArray(coordImgTMP)
 
             print coord3dFromNormTextCoord
@@ -474,8 +526,6 @@ class MainWindow(QtGui.QMainWindow):
                         modelCoord[0] = t2[0]
                         modelCoord[1] = t2[1]
                         modelCoord[2] = t2[2]
-
-
             #print imgCoord
             #print modelCoord
 
@@ -495,7 +545,6 @@ class MainWindow(QtGui.QMainWindow):
             if (img == image):
                 points2D.append(coord2D)
                 points3D.append(coord3D)
-
 
         return points2D,points3D
 
@@ -530,14 +579,12 @@ class MainWindow(QtGui.QMainWindow):
 
 ##########################################################################
     def close(self):
-
         QtGui.qApp.quit()
 
 ##########################################################################
     def open(self):
-
-        self.textureWidget.open()
-
+        #self.textureWidget.open()
+        return
 
 ##########################################################################
     def eventFilter(self, event):
@@ -550,6 +597,27 @@ class MainWindow(QtGui.QMainWindow):
             return QtGui.QDialog.eventFilter(self, event)
 
 ##########################################################################
+    def getTextureImageList(self):
+        self.Texture_images = glob.glob('./3DModelOBJ/*.jpg')
+        print type(self.Texture_images)
+        self.ui.comboBox_Text.clear()
+        self.ui.comboBox_Text.addItems(self.Texture_images)
+        #print type(Texture_images)
+        #print Texture_images[0]
+        self.Config_Camera_Images = glob.glob('./Acquisitions/Calibration/*.JPG')
+        self.ui.comboBox_CameraImg.addItems(self.Config_Camera_Images)
+
+        self.cameraList = []
+        for i in range(1,6):
+            #print i
+            self.cameraList.append(str(i))
+
+        print type(self.cameraList)
+
+        self.ui.comboBox_CameraNumber.clear()
+        self.ui.comboBox_CameraNumber.addItems(self.cameraList)
+
+##########################################################################
     def keyPressEvent(self, e):
         print "in Key pressed"
         if e.key() == QtCore.Qt.Key_Control:
@@ -557,6 +625,7 @@ class MainWindow(QtGui.QMainWindow):
             self.textureWidget.controlPressed = True
         if e.key() == QtCore.Qt.Key_Alt:
             self.imgCameraWidget.altPressed = True
+
             #self.textureWidget.controlPressed = True
         #if e.key() == QtCore.Qt.Key_Shift:
             #self.glWidget.shiftPressed = True

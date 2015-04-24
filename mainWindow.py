@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Tue Apr 21 16:04:12 2015
+# Created: Thu Apr 23 15:15:14 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -66,6 +66,9 @@ class Ui_MainWindow(object):
         self.comboBox_CameraImg = QtGui.QComboBox(self.gridLayoutWidget_2)
         self.comboBox_CameraImg.setObjectName(_fromUtf8("comboBox_CameraImg"))
         self.horizontalLayout_Buttons.addWidget(self.comboBox_CameraImg)
+        self.pushButton_showSelectedImages = QtGui.QPushButton(self.gridLayoutWidget_2)
+        self.pushButton_showSelectedImages.setObjectName(_fromUtf8("pushButton_showSelectedImages"))
+        self.horizontalLayout_Buttons.addWidget(self.pushButton_showSelectedImages)
         self.gridLayout_MainTab1.addLayout(self.horizontalLayout_Buttons, 1, 0, 1, 1)
         self.Tab3.addTab(self.tab, _fromUtf8(""))
         self.tab_2 = QtGui.QWidget()
@@ -143,6 +146,7 @@ class Ui_MainWindow(object):
         self.pushButton_Show3DCorresp.setText(_translate("MainWindow", "Show 3D correspondance conf Points", None))
         self.pushButton_SaveConf.setText(_translate("MainWindow", "Save 2d/3d Markers", None))
         self.pushButton_LoadConf.setText(_translate("MainWindow", "Load 2d/3d config file", None))
+        self.pushButton_showSelectedImages.setText(_translate("MainWindow", "Show Selected Images", None))
         self.Tab3.setTabText(self.Tab3.indexOf(self.tab), _translate("MainWindow", "Tab 1", None))
         self.Tab3.setTabText(self.Tab3.indexOf(self.tab_2), _translate("MainWindow", "Tab 2", None))
         self.pushButton_Calibrate.setText(_translate("MainWindow", "Calibrate Camera", None))

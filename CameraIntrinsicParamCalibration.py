@@ -5,10 +5,11 @@ import numpy
 
 
 class CameraIntrinsicCalibration():
-    def __init__(self,camera=0):
+    def __init__(self,camera=1):
         # Camera 0 is the integrated web cam on my netbook
         self.camera_port = camera
-
+        print "self.camera_port = " + str(self.camera_port)
+        
         cv.NamedWindow("camera", cv.CV_WINDOW_AUTOSIZE)
 
         # Initialize the camera

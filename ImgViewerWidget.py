@@ -41,6 +41,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         self.normCoordMarkers = []
         self.testProjection = []
         self.testProjectionNorm = []
+
     #########################################################################
     def wheelEvent(self, event):
         self.newScale(event.delta(), 1.15,)
@@ -107,7 +108,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         self.graphicsScene.addItem(self.graphicsPixmapItem)
         self.setScene(self.graphicsScene)
         #self.graphicsScene.setItemIndexMethod(QtGui.QGraphicsScene.NoIndex)
-        
+
         print "Exit update Pixmap"
         return
 
@@ -164,6 +165,8 @@ class MyQGraphicsView(QtGui.QGraphicsView):
         if operator < 0:
             self.scale(1.0/factor, 1.0/factor)
 
+        return
+
     #########################################################################
     def getPosRelativeToScene(self , event):
         pos =  self.mapToScene( event.pos() ) #Needs to verify if coord 0 < x < width ....        
@@ -173,6 +176,7 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
     #########################################################################
     def convertToTextureCoord(self, pos):
+
         norm_Coord = numpy.zeros(2)
         norm_Coord[0] = pos.x() *1.0 / self.pixmap.size().width()
         norm_Coord[1] = 1- ((pos.y()) *1.0 / self.pixmap.size().height())
@@ -225,13 +229,15 @@ class MyQGraphicsView(QtGui.QGraphicsView):
 
         for i in range (0,len(self.coordMarkers)):
             imgName,coord = self.coordMarkers[i]
-            #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
-            cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (0,0,255), -1)
+            if self.path == imgName:
+                #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
+                cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (0,0,255), -1)
 
         for i in range (0,len(self.testProjection)):
-            imgName,coord = self.testProjection[i]
-            #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
-            cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (255,0,255), -1)
+                imgName,coord = self.testProjection[i]
+                if self.path == imgName:
+                    #cv2.circle(imgMarked,(int(self.coordMarkers[i].x()),int(self.coordMarkers[i].y())), 10, (0,0,255), -1)
+                    cv2.circle(imgMarked,(int(coord.x()),int(coord.y())), 10, (255,0,255), -1)
 
         #cv2.imshow("window",imgMarked)
         return imgMarked
@@ -240,16 +246,16 @@ class MyQGraphicsView(QtGui.QGraphicsView):
     #########################################################################
     def setImage(self,path):
         print "In set Image"
+        #print type(path)
+        #print path
         self.path = path
         img = cv2.imread(self.path)
         self.imgOriginal = img
-        
-        self.pixmap = QtGui.QPixmap()
-        self.pixmap.load(self.path)
-        self.graphicsPixmapItem = QtGui.QGraphicsPixmapItem(self.pixmap)
-        self.graphicsScene = QtGui.QGraphicsScene()
-        self.graphicsScene.addItem(self.graphicsPixmapItem)
-        self.setScene(self.graphicsScene)
+            
+        imgMarked = self.drawCircles(self.imgOriginal)
+        pix_updated = self.convertImgToPixmap(imgMarked)
+        self.pixmap = pix_updated
+        self.updatePixmap(pix_updated)
 
     #########################################################################
     def setWidth(self,width):

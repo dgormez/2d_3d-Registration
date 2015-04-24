@@ -153,7 +153,7 @@ class GLWidget(QtOpenGL.QGLWidget):
     def initializeGL(self):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
         #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
-        self.obj = OBJ("mesh.obj")
+        self.obj = OBJ("./3DModelOBJ/mesh.obj")
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
 
