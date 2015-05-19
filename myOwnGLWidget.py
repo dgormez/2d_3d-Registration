@@ -57,7 +57,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         #self.initializeGL()
 
-#########################################################################
+#####################################################################################
     def searchIntersectedTriangle(self,norm_point,img_texture="Texture_0"):
         "Search if norm_point lies in a face of the OBJ model"
         result = False
@@ -96,7 +96,7 @@ class GLWidget(QtOpenGL.QGLWidget):
 
         return result,idxIntersectFaces,coord3dFromNormTextCoord
 
-#########################################################################
+#####################################################################################
     def centerTriangle(self,vertices):
         "Simple average of Points in the Triangle. Could be replaced with the exact selected point in texture_coords (and its equivalent in the 3D model)"
         print "In centerTriangle()"
@@ -141,12 +141,10 @@ class GLWidget(QtOpenGL.QGLWidget):
 
 #############################################################################
     def setWidth(self,width):
-
         self.setMinimumSize(width, 200)
 
 #############################################################################
     def setModel(self,obj):
-
         self.obj = obj
 
 #############################################################################
@@ -163,7 +161,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.fovy = 60.0
         self.aspect = self.width / float(self.height)
         self.zNear = 1.0
-        self.zFar = 40.0
+        self.zFar = 100
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         self.near_height = 2 * 1.0 * math.tan(self.fovy/2)
 

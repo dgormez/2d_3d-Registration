@@ -38,7 +38,9 @@ class CameraExtrinsicParameters():
     	errVal, self.rvec, self.tvec = cv2.solvePnP(self.points3D,self.points2D, self.cameraMatrix, self.dist_coefs)
     	print "After SolvePnP"
 
-    	print errVal, self.rvec, self.tvec
+    	print "Err_val:" ,errVal
+        print "Rvec: " , self.rvec
+        print "tvec" ,self.tvec
     	
     	return errVal, self.rvec, self.tvec
 
@@ -56,7 +58,7 @@ class CameraExtrinsicParameters():
 
     	return pointsArray
 
-    def saveParameters(self):
+    def saveParameters(self,filename=""):
         print "In Extrinsic Camera Parameters Saving"
         pathToFolder = "./CameraParameters/"
         stringRvec = "rvec" + str(self.camera_port)+".npy"

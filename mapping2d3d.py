@@ -49,8 +49,8 @@ class Mapping2d3D():
         """
         converted_Point = point3D
         #print point3D
-        #print point3D.shape
         #print type(point3D)
+        #print len(point3D)
         #print type(point3D[0])
 
         if isinstance(point3D, list): 
@@ -83,7 +83,8 @@ class Mapping2d3D():
         #print self.tvec
         #print self.tvec[0][0]
         #print self.tvec[1][0]
-        
+        #Everything is fucking ugly but, that's why you gotta love Python.
+        #Whatever bullshit you write, it has a good chance to work.
         dist = math.sqrt( (point3D[0][0] - self.tvec[0][0]) * (point3D[0][0] - self.tvec[0][0]) 
                            + (point3D[0][1] - self.tvec[1][0]) * (point3D[0][1] - self.tvec[1][0])
                            + (point3D[0][2] - self.tvec[2][0]) * (point3D[0][2] - self.tvec[2][0]))

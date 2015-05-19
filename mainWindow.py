@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'mainwindow.ui'
 #
-# Created: Thu Apr 23 15:15:14 2015
+# Created: Thu May 14 21:27:17 2015
 #      by: PyQt4 UI code generator 4.10.4
 #
 # WARNING! All changes made in this file will be lost!
@@ -86,7 +86,7 @@ class Ui_MainWindow(object):
         self.tab_3 = QtGui.QWidget()
         self.tab_3.setObjectName(_fromUtf8("tab_3"))
         self.gridLayoutWidget = QtGui.QWidget(self.tab_3)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(-1, -1, 177, 303))
+        self.gridLayoutWidget.setGeometry(QtCore.QRect(-1, -1, 177, 336))
         self.gridLayoutWidget.setObjectName(_fromUtf8("gridLayoutWidget"))
         self.gridLayout = QtGui.QGridLayout(self.gridLayoutWidget)
         self.gridLayout.setMargin(0)
@@ -123,6 +123,9 @@ class Ui_MainWindow(object):
         self.pushButton_ProjectModel = QtGui.QPushButton(self.gridLayoutWidget)
         self.pushButton_ProjectModel.setObjectName(_fromUtf8("pushButton_ProjectModel"))
         self.verticalLayout.addWidget(self.pushButton_ProjectModel)
+        self.pushButton_comparePNP = QtGui.QPushButton(self.gridLayoutWidget)
+        self.pushButton_comparePNP.setObjectName(_fromUtf8("pushButton_comparePNP"))
+        self.verticalLayout.addWidget(self.pushButton_comparePNP)
         self.gridLayout.addLayout(self.verticalLayout, 1, 0, 1, 1)
         self.Tab3.addTab(self.tab_3, _fromUtf8(""))
         self.gridLayout_Main.addWidget(self.Tab3, 0, 0, 1, 1)
@@ -137,7 +140,7 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusBar)
 
         self.retranslateUi(MainWindow)
-        self.Tab3.setCurrentIndex(0)
+        self.Tab3.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -157,5 +160,6 @@ class Ui_MainWindow(object):
         self.pushButton_ExtrinsicParameters.setText(_translate("MainWindow", "Find Extrinsic parameters", None))
         self.pushButton_ProjectTestPoint.setText(_translate("MainWindow", "Project Point for Validation", None))
         self.pushButton_ProjectModel.setText(_translate("MainWindow", "Project Model", None))
+        self.pushButton_comparePNP.setText(_translate("MainWindow", "Compare PNP algo", None))
         self.Tab3.setTabText(self.Tab3.indexOf(self.tab_3), _translate("MainWindow", "Page", None))
 

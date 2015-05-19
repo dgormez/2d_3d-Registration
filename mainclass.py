@@ -2,6 +2,8 @@ import sys
 import numpy
 import math
 import glob
+import random
+
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
@@ -52,6 +54,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.pushButton_LoadExtrinsic.clicked.connect(self.loadExtrinsicCameraParam)
         self.ui.pushButton_SaveExtrinsic.clicked.connect(self.saveExtrinsic)
         self.ui.pushButton_showSelectedImages.clicked.connect(self.showSelectedImages)
+        self.ui.pushButton_comparePNP.clicked.connect(self.computeRMSforExtrensicParams)
 
 
         self.glWidget = GLWidget(self)
@@ -171,9 +174,13 @@ class MainWindow(QtGui.QMainWindow):
         #point[0] = coord.x()
         #point[1] = coord.y()
         #print point
+        finalGuessOnCorrectPoint = []
+        closestPointsIn3D = []
 
-        closestPointsIn3D, finalGuessOnCorrectPoint = self.determine3DcorrespondingPointFrom2DImage(coord)
-        
+        for imgTmp, coord in self.imgCameraWidget.testProjection:
+            closestPointsIn3DCurr, finalGuessOnCorrectPointCurr = self.determine3DcorrespondingPointFrom2DImage(coord)
+            closestPointsIn3D.append(closestPointsIn3DCurr)
+            finalGuessOnCorrectPoint.append(finalGuessOnCorrectPointCurr)
         """
         for point3D in closestPointsIn3D:
             coord3D,idxVertice = point3D
@@ -181,8 +188,10 @@ class MainWindow(QtGui.QMainWindow):
         """
         print "finalGuessOnCorrectPoint = " + str(finalGuessOnCorrectPoint)
 
-        for point in finalGuessOnCorrectPoint:
-            coord3D,idxVertice = point
+        for point in finalGuessOnCorrectPoint:            
+            print "Point = " , point[0]
+            print type(point)
+            coord3D,idxVertice = point[0]
             self.glWidget.colorFaceContainingVertice(idxVertice)
         
         self.glWidget.obj.genOpenGLList()
@@ -192,11 +201,48 @@ class MainWindow(QtGui.QMainWindow):
         return
 
 ###################################################################################
+    def retroProjectionTest_ForMarkers(self,markers2D):
+        "In Test Retro projection Point"
+        
+        #print coord
+        #point = numpy.zeros(2)
+        #point[0] = coord.x()
+        #point[1] = coord.y()
+        #print point
+        finalGuessOnCorrectPoint = []
+        closestPointsIn3D = []
+
+        for coord in markers2D:
+            closestPointsIn3DCurr, finalGuessOnCorrectPointCurr = self.determine3DcorrespondingPointFrom2DImage(coord)
+            closestPointsIn3D.append(closestPointsIn3DCurr)
+            finalGuessOnCorrectPoint.append(finalGuessOnCorrectPointCurr)
+        """
+        for point3D in closestPointsIn3D:
+            coord3D,idxVertice = point3D
+            self.glWidget.colorFaceContainingVertice(idxVertice)
+        """
+        print "finalGuessOnCorrectPoint = " + str(finalGuessOnCorrectPoint)
+
+        for point in finalGuessOnCorrectPoint:            
+            print "Point = " , point[0]
+            print type(point)
+            coord3D,idxVertice = point[0]
+            self.glWidget.colorFaceContainingVertice(idxVertice)
+        
+        self.glWidget.obj.genOpenGLList()
+
+        print "End Retro projection"
+
+        return
+
+
+###################################################################################
     def mapp3DModelto2D(self):
         "In Test Project Point"
         #Add a get of the current camera port
         mapping = Mapping2d3D()
         mapping.setIntrinsicParam(self.cameraMatrix,self.dist_coefs)
+
         mapping.setExtrinsicParam(self.rvec,self.tvec)
 
         self.mappingOf3DVertices = []
@@ -230,7 +276,7 @@ class MainWindow(QtGui.QMainWindow):
             print "determine Mean"
 
 ##########################################################################
-    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked,radius =2):
+    def determine3DcorrespondingPointFrom2DImage(self,point2D_fromImage_clicked,radius =5):
         #Find the closest Points projected on the 2D image. In a radius of 5 pixels from the clicked points
         print "In determine 3D corresponding points"
         closestPoints2D =[]
@@ -278,6 +324,7 @@ class MainWindow(QtGui.QMainWindow):
                 closestPoints2D.append(point)
                 closestPointsIn3D.append((self.glWidget.obj.vertices[idx+1],idx+1))#Or no +1???
                 distancesToCamera.append(self.distanceOfMappedPoints[idx])
+        
         print "Closest projected point from  "+ str(NPpoint2D_fromImage_clicked) +" Is : " +str(closestPoints2D)
         print "Corresponding to this 3d model point = " + str(closestPointsIn3D)
 
@@ -288,22 +335,75 @@ class MainWindow(QtGui.QMainWindow):
         final3DCorrespondingPointGuess.append(closestPointsIn3D[idxClosest3DToCamera])
         print "final3DCorrespondingPointGuess = " + str(final3DCorrespondingPointGuess)
 
+
+        #self.findMostProbable3dCorrespondanceFromProjectedPointsByUsingTheMarkers(closestPoints2D,closestPointsIn3D)
+
         return closestPointsIn3D,final3DCorrespondingPointGuess
 
 ##########################################################################
     def findMostProbable3dCorrespondanceFromProjectedPoints(self,distancesToCamera):
-        print " max(distancesToCamera) " + str(max(distancesToCamera))
-        print " min(distancesToCamera) " + str(min(distancesToCamera))
+        #print " max(distancesToCamera) " + str(max(distancesToCamera))
+        #print " min(distancesToCamera) " + str(min(distancesToCamera))
         #Why is it Max and not Min distance???????????
+        print "Distance to Cam = ",distancesToCamera.index(max(distancesToCamera))
         return distancesToCamera.index(max(distancesToCamera))
+
+##########################################################################
+    def findMostProbable3dCorrespondanceFromProjectedPointsByUsingTheMarkers(self,closestPoints2D,closestPointsIn3D):
+        print "In findMostProbable3dCorrespondanceFromProjectedPointsByUsingTheMarkers"
+        distMin = 100
+        closest3DPoint,_ = closestPointsIn3D[0]
+        print "closest3DPoint" , closest3DPoint
+        print "closestPointsIn3D = " +str(closestPointsIn3D)
+        print "closestPoints2D = " + str(closestPoints2D)
+        for idx,point in enumerate(closestPoints2D):
+
+            closest2DMarker,closest3Dequivalent = self.closest3DMarkerTo2DimagePoint(point) 
+            print "closest2DMarker = " + str(closest2DMarker)
+            print ""
+            print "closest3Dequivalent = " ,closest3Dequivalent 
+            print ""
+            print "closestPointsIn3D[idx] ", closestPointsIn3D[idx] 
+            
+
+            closestPointsIn3DTMP ,_ =closestPointsIn3D[idx]
+            distTMP = self.distance3D(closest3Dequivalent, closestPointsIn3DTMP )
+            if distTMP<distMin:
+                closest3DPoint = closestPointsIn3DTMP
+
+        print "closest3DPoint",closest3DPoint
+        print "End findMostProbable3dCorrespondanceFromProjectedPointsByUsingTheMarkers"
+        return closest3DPoint
+
 
 ##########################################################################
     def distance(self,point1,point2):
         dist = 0
-        for i in range(0,len(point1)):
-            dist += (point1[i] - point2[i])^2
+        print point1
+        print point1.shape
+        print point2
+        print point2.shape
+        for i in range(0,point1.shape[0]):
+            dist += ((point1[i] - point2[0][0][i]) * (point1[i] - point2[0][0][i]))
 
         return math.sqrt(dist)
+
+
+
+    def distance3D(self,point1,point2):
+        dist = 0
+        
+        print point1
+        #print point1.shape
+        print point2
+        #print point2.shape
+        #print point2
+
+        for i in range(0,point1.shape[0]):
+            dist += ((point1[i] - point2[i]) * (point1[i] - point2[i]))
+
+        return math.sqrt(dist)
+
 
 ##########################################################################
     def isInCircle(self,radius,center,point):
@@ -374,6 +474,198 @@ class MainWindow(QtGui.QMainWindow):
 
         self.cameraCalib = CameraIntrinsicCalibration(self.camera_port)
 
+##########################################################################
+    def computeRMSforExtrensicParams(self):
+        """
+        For multiple sets of parameters:
+            compute extrensic parameters with different algorihtms
+
+        for each extrinsic parameters set:
+            find set of 3D corresponding points.
+
+        compute mean RMS of all points
+
+        """
+
+        print "computeRMSforExtrensicParams"
+
+        image = str(self.ui.comboBox_CameraImg.currentText())
+        configFile = self.loadConfigFile(image)
+        print "Config File = ", configFile
+
+        #correspondance2D3D = self.loadConfigFile()
+        correspondance2D3DTMP =  self.correspondance2D3D
+
+        markers_2D = []
+        markers_3D = []
+        markers_2DQPoint = []
+        rvec = 0
+        tvec = 0
+
+
+        """
+        nbr_samples = 15
+        print len(correspondance2D3DTMP)
+        print range(0,len(correspondance2D3DTMP))
+
+        random_List =  random.sample(range(0,len(correspondance2D3DTMP)), len(correspondance2D3DTMP))
+        complement_random_List =  []
+
+        print "random_List" , random_List , len(random_List)
+        print "range(nbr_samples+1,len(correspondance2D3DTMP))",range(nbr_samples+1,len(correspondance2D3DTMP))
+        for i in range(nbr_samples+1,len(correspondance2D3DTMP)):
+            complement_random_List.append(random_List[i])
+        
+        print "complement_random_List",complement_random_List, len(complement_random_List)
+
+        #self.correspondance2D3D.append((values[0],imgCoord,modelCoord))
+        #print type(correspondance2D3DTMP)
+        """
+
+        #Load number of correspondances to use as trainig set.
+        for index in range(0,len(correspondance2D3DTMP)):
+            imageTMP, imgCoord, modelCoord = correspondance2D3DTMP[index]
+
+            if image == imageTMP:
+                    print "Correspondance = ", imageTMP, imgCoord, modelCoord
+
+
+                    point  = QtCore.QPoint(imgCoord[0],imgCoord[1])
+                    print "Type Point = ", type(point)
+                    point.setX(imgCoord[0])
+                    point.setY(imgCoord[1])
+                    markers_2DQPoint.append(point)
+                    markers_2D.append(imgCoord)
+                    markers_3D.append(modelCoord)
+
+
+        #self.camera_port = 0
+        
+        #Compute extrinsic parameters
+        self.cameraCalibExt = CameraExtrinsicParameters(self.camera_port)
+        self.cameraCalibExt.loadIntrinsicCameraParam()
+        self.cameraCalibExt.setCorrespondingPoints(markers_2D,markers_3D)
+        errVal, self.rvec, self.tvec = self.cameraCalibExt.computeExtrensicParameters()
+
+        print "rvec", self.rvec
+        print "tvec", self.tvec
+        
+
+        self.mapp3DModelto2D()
+
+        #uncomment next line to vizualize projected points
+        #self.retroProjectionTest_ForMarkers(markers_2DQPoint)
+
+        found_3D_points = []
+        found_3D_points_verticeIDX = []
+
+        for mark in markers_2D:
+            point  = QtCore.QPoint(mark[0],mark[1])
+            print "Type Point = ", type(point)
+            point.setX(mark[0])
+            point.setY(mark[1])
+
+            closestPointsIn3D,final3DCorrespondingPointGuess = self.determine3DcorrespondingPointFrom2DImage(point,10)
+
+            #closestPointsIn3D,final3DCorrespondingPointGuess = self.determineEquivalent(mark,rvec, tvec)
+            print "marker = ",mark
+            print "final3DCorrespondingPointGuess =",final3DCorrespondingPointGuess
+            PtTmp,idx = final3DCorrespondingPointGuess[0]
+            
+            found_3D_points_verticeIDX.append(self.glWidget.obj.vertices[idx])
+            found_3D_points.append(PtTmp)
+
+        RMS_total = 0.0
+        #print "found_3D_points",found_3D_points
+        #print "markers_3D = ",markers_3D
+        print "found_3D_points_verticeIDX",found_3D_points_verticeIDX
+        print "Length : found_3D_points_verticeIDX", len(found_3D_points_verticeIDX)
+        print "found_3D_points_verticeIDX[0]",found_3D_points_verticeIDX[0]
+
+        for i in range(0,len(found_3D_points_verticeIDX)):
+            print "i = " +str(i)
+            dist = self.distance3D(markers_3D[i],found_3D_points_verticeIDX[i])
+            if dist > 5:
+                print "Fucking problem with mapping"
+            else:
+                print "Mapping OK. Dist = " + str(dist)
+                RMS_total += dist
+
+            print RMS_total
+
+        print "Mean RMS = ", (RMS_total/len(found_3D_points_verticeIDX))
+
+        return
+
+    ##########################################################################
+    def determineEquivalent(self,point2D,rvec, tvec,radius=15):
+        #Find the closest Points projected on the 2D image. In a radius of 5 pixels from the clicked points
+        print "In determineEquivalent 3D corresponding points"
+        closestPoints2D =[]
+        closestPointsIn3D = []
+        distancesToCamera = []
+
+        #print len(self.mappingOf3DVertices)
+        #print self.mappingOf3DVertices[0]
+        #print len (self.glWidget.obj.vertices)
+
+        NPpoint2D_fromImage_clicked = numpy.zeros(2)
+        NPpoint2D_fromImage_clicked[0] = point2D[0]
+        NPpoint2D_fromImage_clicked[1] = point2D[1]
+
+        
+        for idx,point in enumerate(self.mappingOf3DVertices):
+            #coordMapped3DVertice = numpy
+
+            if self.isInCircle(radius,NPpoint2D_fromImage_clicked,point):
+                #print "In Circle!!"
+                closestPoints2D.append(point)
+                closestPointsIn3D.append((self.glWidget.obj.vertices[idx+1],idx+1))#Or no +1???
+                distancesToCamera.append(self.distanceOfMappedPoints[idx])
+        
+        #print "Closest projected point from  "+ str(NPpoint2D_fromImage_clicked) +" Is : " +str(closestPoints2D)
+        #print "Corresponding to this 3d model point = " + str(closestPointsIn3D)
+
+        idxClosest3DToCamera = self.findMostProbable3dCorrespondanceFromProjectedPoints(distancesToCamera)
+        #print "idxClosest3DToCamera = " +str(idxClosest3DToCamera)
+        #print "Distance to camera for that point = " + str(distancesToCamera[idxClosest3DToCamera])
+        final3DCorrespondingPointGuess = []
+        final3DCorrespondingPointGuess.append(closestPointsIn3D[idxClosest3DToCamera])
+        #print "final3DCorrespondingPointGuess = " + str(final3DCorrespondingPointGuess)
+
+        #self.findMostProbable3dCorrespondanceFromProjectedPointsByUsingTheMarkers(closestPoints2D,closestPointsIn3D)
+
+        return closestPointsIn3D,final3DCorrespondingPointGuess
+
+##########################################################################
+    def closest3DMarkerTo2DimagePoint(self,coord2DimagePoint):
+        print "In closest2DMarkerTo2DimagePoint()"
+        image = str(self.ui.comboBox_CameraImg.currentText())
+        #correspondance2D3D = self.loadConfigFile()
+        correspondance2D3DTMP =  self.correspondance2D3D
+        print "coord2DimagePoint = " , coord2DimagePoint
+
+        closest2DMarker = 0
+        closest3DMarker = 0
+        distMin = 100 
+
+        #self.correspondance2D3D.append((values[0],imgCoord,modelCoord))
+        print type(correspondance2D3DTMP)
+        for correspondance in correspondance2D3DTMP:
+            imageTMP, imgCoord, modelCoord = correspondance
+            print "correspondance = " , correspondance
+
+            if image == imageTMP:
+                distTMP = self.distance(imgCoord,coord2DimagePoint)
+                if distTMP < distMin:
+                    distMin = distTMP
+                    closest2DMarker= imgCoord
+                    closest3DMarker = modelCoord
+
+
+        print "return value in closest3DMarkerTo2DimagePoint = ", closest2DMarker,closest3DMarker
+
+        return closest2DMarker,closest3DMarker
 
 ##########################################################################
     def saveIntrinsic(self):
@@ -489,22 +781,17 @@ class MainWindow(QtGui.QMainWindow):
         print self.facesCorrespondingTo2DconfigPoints
 
 ##########################################################################
-    def loadConfigFile(self):
+    def loadConfigFile(self,image = ""):
+        "Load the file containing the 2D/3D markers allowing the computing of the extrinsic parameters"
         print "In loadConfigFile"
         filename="2d3dMapping.conf"
+
+
 
         for line in open(filename, "r"):
             if line.startswith('#'): continue
             values = line.split('!',2)
             if not values: continue
-
-            #print "values = " + str(values)
-            #print type(values)
-            #print len(values)
-            #print "values[0] " + str(values[0])
-            #print "values[1] " + str(values[1])
-            #print "values[2] " + str(values[2])
-
 
             imgCoord = numpy.zeros(2)
             modelCoord = numpy.zeros(3)
@@ -533,6 +820,7 @@ class MainWindow(QtGui.QMainWindow):
 
         print self.correspondance2D3D
 
+        return self.correspondance2D3D
         #self.loadIdxConfFaces()
 
 ##########################################################################
