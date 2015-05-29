@@ -35,13 +35,22 @@ class CameraExtrinsicParameters():
 
     def computeExtrensicParameters(self):
     	print "In computeExtrensicParameters"
+        #self.cameraMatrix = cv.fromarray(self.cameraMatrix)
+        #self.dist_coefs = cv.fromarray(self.dist_coefs)
+
     	errVal, self.rvec, self.tvec = cv2.solvePnP(self.points3D,self.points2D, self.cameraMatrix, self.dist_coefs)
     	print "After SolvePnP"
 
+        #self.rvec2, self.tvec2,errVal2 = cv2.solvePnPRansac(self.points3D,self.points2D, self.cameraMatrix, self.dist_coefs)
     	print "Err_val:" ,errVal
         print "Rvec: " , self.rvec
         print "tvec" ,self.tvec
     	
+        # print "Using Ransac scheme"
+        # print "Err_val:" ,errVal2
+        # print "Rvec: " , self.rvec2
+        # print "tvec" ,self.tvec2
+
     	return errVal, self.rvec, self.tvec
 
     def transformListInArrayOfPoints(self,listOfPoints):

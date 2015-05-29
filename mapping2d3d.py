@@ -66,7 +66,7 @@ class Mapping2d3D():
         #print point3D
 
         imgPoint, jacobian = cv2.projectPoints(converted_Point, self.rvec, self.tvec, self.cameraMatrix, self.dist_coefs)
-
+        
         #print "Model 3D point: " + str(point3D)
         #print "Image point :" + str(imgPoint)
 

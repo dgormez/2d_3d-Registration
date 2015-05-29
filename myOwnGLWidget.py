@@ -152,16 +152,17 @@ class GLWidget(QtOpenGL.QGLWidget):
         self.qglClearColor(QtGui.QColor(0, 0,  150))
         #self.obj = OBJ("3D_360Recap_8Mpx_JPG_CLEANED_FULLY.obj")
         self.obj = OBJ("./3DModelOBJ/mesh.obj")
+        print "Model Loaded"
         #glEnable(GL_DEPTH_TEST)
            # most obj files expect to be smooth-shaded
 
         
         glMatrixMode(GL_PROJECTION)
         glLoadIdentity()
-        self.fovy = 60.0
+        self.fovy = 90.0
         self.aspect = self.width / float(self.height)
         self.zNear = 1.0
-        self.zFar = 100
+        self.zFar = 1000
         GLU.gluPerspective(self.fovy, self.aspect, self.zNear, self.zFar)
         self.near_height = 2 * 1.0 * math.tan(self.fovy/2)
 
@@ -238,8 +239,8 @@ class GLWidget(QtOpenGL.QGLWidget):
                     #self.rz +=  delta_x
                 if self.controlPressed : 
                 #if self.move : 
-                    self.tx += delta_x/10
-                    self.ty += -delta_y/10
+                    self.tx += delta_x/20
+                    self.ty += -delta_y/20
 
             self.update()
 
@@ -251,7 +252,7 @@ class GLWidget(QtOpenGL.QGLWidget):
         x = event.delta()
         #d = - float(_event.delta()) / 200.0 * self.radius_
         #self.updateGL()
-        self.zpos += 2 * math.copysign(1, x)
+        self.zpos += 10 * math.copysign(1, x)
         #print "wheelEvent x = ", x
         self.update()
 

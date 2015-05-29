@@ -585,7 +585,7 @@ class MainWindow(QtGui.QMainWindow):
         for i in range(0,len(found_3D_points_verticeIDX)):
             print "i = " +str(i)
             dist = self.distance3D(markers_3D[i],found_3D_points_verticeIDX[i])
-            if dist > 5:
+            if dist > 100:
                 print "Fucking problem with mapping"
             else:
                 print "Mapping OK. Dist = " + str(dist)
@@ -708,6 +708,9 @@ class MainWindow(QtGui.QMainWindow):
         """
         Makes the link between the texture coord and the 3d coordinates.
         It writes the output in a file to allow a loading of a config file for the 2d/3D mapping.
+        
+        This is the function that needs to be modified to consider the name variation of the textures
+
         """
 
         f = open('2d3dMapping.conf','w')
@@ -721,6 +724,7 @@ class MainWindow(QtGui.QMainWindow):
         if len(self.textureWidget.normCoordMarkers) != len(self.imgCameraWidget.coordMarkers):
             print "Markers list lengths do NOT match!!! "
 
+        print "Before the for"
         for idxCoord,norm_Coord in enumerate(self.textureWidget.normCoordMarkers):
             texture,norm_CoordTMP = norm_Coord
             imgCamera, coordImgTMP = self.imgCameraWidget.coordMarkers[idxCoord]
@@ -730,11 +734,12 @@ class MainWindow(QtGui.QMainWindow):
             print "imgCamera = " + str(imgCamera)
 
             if texture == "./3DModelOBJ/tex_0.jpg":
-                material = "Texture_0"
+                material = "material_0"
             if texture == "./3DModelOBJ/tex_1.jpg":
-                material = "Texture_1"
-            if texture == "./3DModelOBJ/tex_2.jpg":
-                material = "Texture_2"
+                material = "material_1"
+
+            # if texture == "./3DModelOBJ/tex_2.jpg":
+            #     material = "Texture_2"
 
             result,idxIntersectFaces,coord3dFromNormTextCoord = self.glWidget.searchIntersectedTriangle(norm_CoordTMP,material)
             print "Face found = " + str(result) + " face = " + str(self.glWidget.obj.faces[idxIntersectFaces]) + " Coord3dFromNormTextCoord = " + str(coord3dFromNormTextCoord)
@@ -758,6 +763,7 @@ class MainWindow(QtGui.QMainWindow):
             #Add here the creation of config File
 
         f.close()
+        print "After the for"
 
         self.saveIdxConfFaces()
         print "End of save conf 2D 3D"
