@@ -498,7 +498,7 @@ class MainWindow(QtGui.QMainWindow):
 
         markers_2D = []
         markers_3D = []
-        markers_2DQPoint = []
+        markers_2DQPoint = [] 
         rvec = 0
         tvec = 0
 
