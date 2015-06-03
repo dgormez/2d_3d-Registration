@@ -487,7 +487,7 @@ class MainWindow(QtGui.QMainWindow):
 
         """
 
-        print "computeRMSforExtrensicParams"
+        print "computeRMSforExtrensicParams "
 
         image = str(self.ui.comboBox_CameraImg.currentText())
         configFile = self.loadConfigFile(image)
