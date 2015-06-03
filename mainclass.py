@@ -344,8 +344,8 @@ class MainWindow(QtGui.QMainWindow):
     def findMostProbable3dCorrespondanceFromProjectedPoints(self,distancesToCamera):
         #print " max(distancesToCamera) " + str(max(distancesToCamera))
         #print " min(distancesToCamera) " + str(min(distancesToCamera))
-        #Why is it Max and not Min distance???????????
-        print "Distance to Cam = ",distancesToCamera.index(max(distancesToCamera))
+        #Why is it Max and not Min distance to have the closest
+        #print "Distance to Cam = ",distancesToCamera.index(max(distancesToCamera))
         return distancesToCamera.index(max(distancesToCamera))
 
 ##########################################################################
@@ -503,8 +503,8 @@ class MainWindow(QtGui.QMainWindow):
         tvec = 0
 
 
-        """
-        nbr_samples = 15
+        
+        nbr_samples = 10
         print len(correspondance2D3DTMP)
         print range(0,len(correspondance2D3DTMP))
 
@@ -520,7 +520,7 @@ class MainWindow(QtGui.QMainWindow):
 
         #self.correspondance2D3D.append((values[0],imgCoord,modelCoord))
         #print type(correspondance2D3DTMP)
-        """
+        
 
         #Load number of correspondances to use as trainig set.
         for index in range(0,len(correspondance2D3DTMP)):
